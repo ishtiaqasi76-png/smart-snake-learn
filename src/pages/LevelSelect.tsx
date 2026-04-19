@@ -21,6 +21,7 @@ const LevelSelect = () => {
 
   return (
     <div className="min-h-screen gradient-sky px-4 py-6 flex flex-col items-center">
+      <ExtraAdBanner />
       <div className="w-full max-w-md flex items-center gap-3 mb-4">
         <button onClick={() => navigate("/")} className="kid-btn bg-card px-4 py-2">←</button>
         <h2 className="text-2xl font-extrabold flex items-center gap-2">
