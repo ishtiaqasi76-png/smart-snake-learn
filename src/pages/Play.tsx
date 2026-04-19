@@ -6,6 +6,7 @@ import { saveStars, unlockSticker } from "@/game/storage";
 import { Star } from "@/components/Star";
 import { sounds } from "@/game/sounds";
 import { prepareInterstitial, showInterstitial } from "@/game/interstitial";
+import ExtraAdBanner from "@/components/ExtraAdBanner";
 
 const STICKERS = ["🦄", "🌟", "🦖", "🐼", "🚀", "🍩", "🐙", "🦋", "🍉"];
 
@@ -92,6 +93,7 @@ const Play = () => {
 
   return (
     <div className="min-h-screen gradient-sky">
+      <ExtraAdBanner />
       <SnakeBoard
         subLevel={subLevel}
         category={level.id}

@@ -3,6 +3,7 @@ import { LEVELS } from "@/game/levels";
 import { loadProgress } from "@/game/storage";
 import { sounds } from "@/game/sounds";
 import schoolHero from "@/assets/school-hero.jpg";
+import ExtraAdBanner from "@/components/ExtraAdBanner";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ const Home = () => {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
+      <ExtraAdBanner />
       {/* Full-page background image */}
       <img
         src={schoolHero}

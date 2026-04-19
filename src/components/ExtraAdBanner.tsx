@@ -8,7 +8,7 @@ import {
 } from "@capacitor-community/admob";
 
 const EXTRA_AD_ID = "ca-app-pub-9193011598064450/3563652748";
-const REFRESH_INTERVAL_MS = 30_000;
+const REFRESH_INTERVAL_MS = 20_000;
 
 /**
  * Secondary AdMob banner anchored to the TOP of the screen.
