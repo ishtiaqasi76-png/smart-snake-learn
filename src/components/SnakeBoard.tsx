@@ -3,6 +3,7 @@ import { SubLevel, LevelCategory } from "@/game/levels";
 import { sounds } from "@/game/sounds";
 import { speech } from "@/game/speech";
 import { cn } from "@/lib/utils";
+import gardenBg from "@/assets/garden-board.jpg";
 
 type Dir = "up" | "down" | "left" | "right";
 type Cell = { x: number; y: number };
@@ -227,18 +228,20 @@ export const SnakeBoard = ({ subLevel, category, onExit, onFinish }: Props) => {
       {/* Board */}
       <div
         className={cn(
-          "relative w-full max-w-md aspect-[14/18] rounded-[var(--radius)] overflow-hidden border-4 border-primary/30 bg-board",
+          "relative w-full max-w-md aspect-[14/18] rounded-[var(--radius)] overflow-hidden border-4 border-primary/30",
           shake && "animate-shake"
         )}
         style={{
-          backgroundImage:
-            "linear-gradient(hsl(var(--board-grid)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--board-grid)) 1px, transparent 1px)",
-          backgroundSize: `${100 / COLS}% ${100 / ROWS}%`,
+          backgroundImage: `url(${gardenBg})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
           touchAction: "none",
         }}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
+        {/* subtle overlay for contrast */}
+        <div className="absolute inset-0 bg-background/10 pointer-events-none" />
         {/* items */}
         {items.map((it) => (
           <div
