@@ -63,15 +63,12 @@ export const SnakeBoard = ({ subLevel, onExit, onFinish }: Props) => {
           return;
         }
       };
-      // target
-      const tgt = subLevel.sequence[nextIdx];
-      if (tgt !== undefined) tryPlace(tgt);
-      // distractors: pick from sequence (not equal to target)
-      const pool = subLevel.sequence.filter((v) => v !== tgt);
-      const need = Math.max(0, subLevel.itemsOnBoard - 1);
-      for (let i = 0; i < need; i++) {
-        const v = pool[Math.floor(Math.random() * pool.length)];
-        tryPlace(v);
+      // Show the next N items in sequence order starting from the current target.
+      // This way kids see 1,2,3,4,5 (or A,B,C,D,E) on the board and must eat them in order.
+      const count = Math.min(subLevel.itemsOnBoard, subLevel.sequence.length - nextIdx);
+      for (let i = 0; i < count; i++) {
+        const v = subLevel.sequence[nextIdx + i];
+        if (v !== undefined) tryPlace(v);
       }
       setItems(placed);
     },
