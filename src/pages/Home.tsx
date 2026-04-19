@@ -53,27 +53,32 @@ const Home = () => {
             <button
               key={lvl.id}
               onClick={() => go(lvl.id)}
-              className="kid-btn p-5 text-left flex items-center gap-4 bg-card/90 backdrop-blur animate-scale-in"
+              className="kid-btn relative overflow-hidden text-left bg-card/90 backdrop-blur animate-scale-in h-32"
               style={{ animationDelay: `${i * 80}ms` }}
               aria-label={`Play ${lvl.title}`}
             >
-              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center overflow-hidden ${lvl.color}`}>
-                <img
-                  src={lvl.image}
-                  alt={`${lvl.title} icon`}
-                  width={64}
-                  height={64}
-                  loading="lazy"
-                  className="w-full h-full object-contain p-1"
-                />
-              </div>
-              <div className="flex-1">
-                <div className="text-xl font-extrabold">{lvl.title}</div>
-                <div className="text-sm text-muted-foreground">
-                  {lvl.subLevels.length} levels
+              {/* Full-button background image */}
+              <img
+                src={lvl.image}
+                alt={`${lvl.title} icon`}
+                loading="lazy"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              {/* Readability overlay */}
+              <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-background/40 to-background/10" />
+
+              {/* Foreground content */}
+              <div className="relative z-10 h-full flex items-center gap-4 p-5">
+                <div className="flex-1">
+                  <div className="text-2xl font-extrabold drop-shadow-[0_1px_2px_rgba(255,255,255,0.6)]">
+                    {lvl.title}
+                  </div>
+                  <div className="text-sm text-foreground/80 font-semibold">
+                    {lvl.subLevels.length} levels
+                  </div>
                 </div>
+                <span className="text-3xl bg-card/80 rounded-full w-10 h-10 flex items-center justify-center shadow">▶</span>
               </div>
-              <span className="text-2xl">▶</span>
             </button>
           ))}
         </div>
