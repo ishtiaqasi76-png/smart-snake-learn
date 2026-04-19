@@ -41,30 +41,37 @@ const LevelSelect = () => {
             <button
               key={sub.id}
               onClick={() => { sounds.tap(); navigate(`/play/${level.id}/${sub.id}`); }}
-              className="kid-btn bg-card p-5 text-left flex items-center gap-4 animate-scale-in"
+              className="kid-btn relative overflow-hidden text-left bg-card animate-scale-in h-32"
               style={{ animationDelay: `${i * 80}ms` }}
             >
-              <div className={`relative w-16 h-16 rounded-2xl flex items-center justify-center overflow-hidden ${level.color}`}>
-                <img
-                  src={level.image}
-                  alt={`${level.title} illustration`}
-                  width={64}
-                  height={64}
-                  loading="lazy"
-                  className="w-full h-full object-contain p-1"
-                />
-                <span className="absolute bottom-0 right-0 bg-card text-foreground text-xs font-extrabold rounded-tl-lg px-1.5 py-0.5 shadow">
+              {/* Full-button background image */}
+              <img
+                src={level.image}
+                alt={`${level.title} illustration`}
+                loading="lazy"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              {/* Readability overlay */}
+              <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-background/40 to-background/10" />
+
+              {/* Foreground content */}
+              <div className="relative z-10 h-full flex items-center gap-4 p-5">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-extrabold ${level.color} text-primary-foreground shadow`}>
                   {i + 1}
-                </span>
-              </div>
-              <div className="flex-1">
-                <div className={`text-xl font-extrabold ${sub.fontClass ?? ""}`}>{sub.title}</div>
-                {sub.subtitle && <div className="text-sm text-muted-foreground">{sub.subtitle}</div>}
-              </div>
-              <div className="flex gap-0.5 text-2xl">
-                {[1, 2, 3].map((n) => (
-                  <Star key={n} filled={stars >= n} className="!text-2xl" />
-                ))}
+                </div>
+                <div className="flex-1">
+                  <div className={`text-xl font-extrabold drop-shadow-[0_1px_2px_rgba(255,255,255,0.6)] ${sub.fontClass ?? ""}`}>
+                    {sub.title}
+                  </div>
+                  {sub.subtitle && (
+                    <div className="text-sm text-foreground/80 font-semibold">{sub.subtitle}</div>
+                  )}
+                </div>
+                <div className="flex gap-0.5 text-2xl bg-card/80 rounded-full px-2 py-1 shadow">
+                  {[1, 2, 3].map((n) => (
+                    <Star key={n} filled={stars >= n} className="!text-2xl" />
+                  ))}
+                </div>
               </div>
             </button>
           );
