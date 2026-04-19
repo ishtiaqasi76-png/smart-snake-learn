@@ -3,6 +3,7 @@ import { SubLevel, LevelCategory } from "@/game/levels";
 import { sounds } from "@/game/sounds";
 import { speech } from "@/game/speech";
 import { cn } from "@/lib/utils";
+import gardenBg from "@/assets/garden-board.jpg";
 
 type Dir = "up" | "down" | "left" | "right";
 type Cell = { x: number; y: number };
@@ -227,18 +228,20 @@ export const SnakeBoard = ({ subLevel, category, onExit, onFinish }: Props) => {
       {/* Board */}
       <div
         className={cn(
-          "relative w-full max-w-md aspect-[14/18] rounded-[var(--radius)] overflow-hidden border-4 border-primary/30 bg-board",
+          "relative w-full max-w-md aspect-[14/18] rounded-[var(--radius)] overflow-hidden border-4 border-primary/30",
           shake && "animate-shake"
         )}
         style={{
-          backgroundImage:
-            "linear-gradient(hsl(var(--board-grid)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--board-grid)) 1px, transparent 1px)",
-          backgroundSize: `${100 / COLS}% ${100 / ROWS}%`,
+          backgroundImage: `url(${gardenBg})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
           touchAction: "none",
         }}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
+        {/* subtle overlay for contrast */}
+        <div className="absolute inset-0 bg-background/10 pointer-events-none" />
         {/* items */}
         {items.map((it) => (
           <div
@@ -263,63 +266,104 @@ export const SnakeBoard = ({ subLevel, category, onExit, onFinish }: Props) => {
         {snake.map((s, i) => {
           const isHead = i === 0;
           const isTail = i === snake.length - 1;
-          // rotation for head based on direction
           const rot = dir === "up" ? -90 : dir === "down" ? 90 : dir === "left" ? 180 : 0;
+          // alternating scale pattern for realism
+          const scaleShade = i % 2 === 0 ? "var(--snake-body)" : "var(--snake-head)";
           return (
             <div
               key={i}
-              className={cn(
-                "absolute transition-[left,top] duration-100",
-              )}
+              className="absolute transition-[left,top] duration-100"
               style={{
                 left: `${s.x * cellPx}%`,
                 top: `${s.y * cellPxY}%`,
                 width: `${cellPx}%`,
                 height: `${cellPxY}%`,
-                zIndex: isHead ? 20 : 10 - Math.min(i, 9),
+                zIndex: isHead ? 30 : 20 - Math.min(i, 18),
               }}
             >
               {isHead ? (
                 <div
                   className="w-full h-full relative"
-                  style={{ transform: `rotate(${rot}deg)` }}
+                  style={{ transform: `rotate(${rot}deg) scale(1.35)`, transformOrigin: "center" }}
                 >
-                  {/* head shape */}
+                  {/* cobra hood */}
                   <div
-                    className="absolute inset-0 rounded-[40%]"
+                    className="absolute"
                     style={{
+                      left: "-15%",
+                      top: "10%",
+                      width: "70%",
+                      height: "80%",
+                      background: `radial-gradient(ellipse at center, hsl(145 75% 40%) 0%, hsl(145 80% 28%) 100%)`,
+                      borderRadius: "60% 30% 60% 30%",
+                      boxShadow: "inset 0 -3px 6px rgba(0,0,0,0.35)",
+                    }}
+                  />
+                  {/* head shape (oval) */}
+                  <div
+                    className="absolute"
+                    style={{
+                      left: "25%",
+                      top: "15%",
+                      width: "75%",
+                      height: "70%",
                       background:
-                        "radial-gradient(circle at 30% 30%, hsl(var(--snake-head)) 0%, hsl(var(--snake-body)) 100%)",
+                        "radial-gradient(circle at 70% 35%, hsl(145 85% 55%) 0%, hsl(145 80% 32%) 100%)",
+                      borderRadius: "55% 70% 55% 70%",
                       boxShadow:
-                        "0 0 10px hsl(var(--primary-glow) / 0.6), inset -2px -2px 4px rgba(0,0,0,0.2)",
+                        "0 0 10px hsl(var(--primary-glow) / 0.6), inset -3px -3px 6px rgba(0,0,0,0.3), inset 2px 2px 4px rgba(255,255,255,0.2)",
+                    }}
+                  />
+                  {/* hood pattern (cobra mark) */}
+                  <span
+                    className="absolute"
+                    style={{
+                      left: "0%",
+                      top: "38%",
+                      width: "35%",
+                      height: "24%",
+                      background: "hsl(45 90% 55%)",
+                      borderRadius: "50%",
+                      opacity: 0.85,
                     }}
                   />
                   {/* eyes */}
-                  <span className="absolute top-[18%] right-[18%] w-[22%] h-[22%] rounded-full bg-white flex items-center justify-center">
-                    <span className="w-[55%] h-[55%] rounded-full bg-black" />
+                  <span className="absolute top-[22%] right-[18%] w-[18%] h-[18%] rounded-full bg-white flex items-center justify-center shadow-sm">
+                    <span className="w-[55%] h-[80%] rounded-full bg-black" />
                   </span>
-                  <span className="absolute bottom-[18%] right-[18%] w-[22%] h-[22%] rounded-full bg-white flex items-center justify-center">
-                    <span className="w-[55%] h-[55%] rounded-full bg-black" />
+                  <span className="absolute bottom-[22%] right-[18%] w-[18%] h-[18%] rounded-full bg-white flex items-center justify-center shadow-sm">
+                    <span className="w-[55%] h-[80%] rounded-full bg-black" />
                   </span>
-                  {/* tongue */}
+                  {/* forked tongue */}
                   <span
-                    className="absolute top-1/2 -right-[30%] w-[35%] h-[10%] -translate-y-1/2 animate-pulse"
+                    className="absolute top-1/2 -right-[35%] w-[40%] h-[12%] -translate-y-1/2 animate-pulse"
                     style={{
-                      background: "hsl(0 80% 55%)",
-                      clipPath: "polygon(0 40%, 70% 40%, 70% 0, 100% 50%, 70% 100%, 70% 60%, 0 60%)",
+                      background: "hsl(0 85% 55%)",
+                      clipPath: "polygon(0 35%, 60% 35%, 60% 0, 100% 50%, 60% 100%, 60% 65%, 0 65%)",
                     }}
                   />
                 </div>
               ) : (
                 <div
-                  className={cn("absolute rounded-full", isTail ? "inset-[18%]" : "inset-[8%]")}
+                  className="absolute inset-0"
                   style={{
-                    background: `radial-gradient(circle at 35% 35%, hsl(var(--snake-body)) 0%, hsl(var(--snake-head)) 100%)`,
-                    boxShadow: "inset -1px -1px 3px rgba(0,0,0,0.25), 0 1px 2px rgba(0,0,0,0.15)",
+                    background: `radial-gradient(circle at 35% 35%, hsl(${scaleShade}) 0%, hsl(var(--snake-head)) 100%)`,
+                    borderRadius: isTail ? "50% 50% 50% 50% / 60% 60% 50% 50%" : "45%",
+                    boxShadow:
+                      "inset -2px -2px 4px rgba(0,0,0,0.3), inset 2px 2px 3px rgba(255,255,255,0.25), 0 1px 2px rgba(0,0,0,0.2)",
+                    transform: isTail ? "scale(0.85)" : "scale(1.05)",
                   }}
                 >
-                  {/* scale dot */}
-                  <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[35%] h-[35%] rounded-full bg-white/20" />
+                  {/* belly scale stripe */}
+                  <span
+                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+                    style={{
+                      width: "55%",
+                      height: "55%",
+                      background:
+                        "linear-gradient(135deg, hsl(45 90% 65% / 0.45), transparent 70%)",
+                    }}
+                  />
                 </div>
               )}
             </div>
