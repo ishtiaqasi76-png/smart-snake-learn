@@ -3,6 +3,7 @@ import { LEVELS } from "@/game/levels";
 import { loadProgress } from "@/game/storage";
 import { Star } from "@/components/Star";
 import { sounds } from "@/game/sounds";
+import ExtraAdBanner from "@/components/ExtraAdBanner";
 
 const LevelSelect = () => {
   const { category } = useParams();
