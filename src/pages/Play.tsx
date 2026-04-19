@@ -86,6 +86,7 @@ const Play = () => {
     <div className="min-h-screen gradient-sky">
       <SnakeBoard
         subLevel={subLevel}
+        category={level.id}
         onFinish={handleFinish}
         onExit={() => navigate(`/levels/${level.id}`)}
       />
