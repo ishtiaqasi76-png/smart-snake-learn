@@ -63,15 +63,12 @@ export const SnakeBoard = ({ subLevel, onExit, onFinish }: Props) => {
           return;
         }
       };
-      // target
-      const tgt = subLevel.sequence[nextIdx];
-      if (tgt !== undefined) tryPlace(tgt);
-      // distractors: pick from sequence (not equal to target)
-      const pool = subLevel.sequence.filter((v) => v !== tgt);
-      const need = Math.max(0, subLevel.itemsOnBoard - 1);
-      for (let i = 0; i < need; i++) {
-        const v = pool[Math.floor(Math.random() * pool.length)];
-        tryPlace(v);
+      // Show the next N items in sequence order starting from the current target.
+      // This way kids see 1,2,3,4,5 (or A,B,C,D,E) on the board and must eat them in order.
+      const count = Math.min(subLevel.itemsOnBoard, subLevel.sequence.length - nextIdx);
+      for (let i = 0; i < count; i++) {
+        const v = subLevel.sequence[nextIdx + i];
+        if (v !== undefined) tryPlace(v);
       }
       setItems(placed);
     },
@@ -252,29 +249,71 @@ export const SnakeBoard = ({ subLevel, onExit, onFinish }: Props) => {
         ))}
 
         {/* snake */}
-        {snake.map((s, i) => (
-          <div
-            key={i}
-            className={cn(
-              "absolute rounded-md transition-[left,top] duration-100",
-              i === 0 ? "bg-snake-head" : "bg-snake-body"
-            )}
-            style={{
-              left: `${s.x * cellPx}%`,
-              top: `${s.y * cellPxY}%`,
-              width: `${cellPx}%`,
-              height: `${cellPxY}%`,
-              boxShadow: i === 0 ? "0 0 12px hsl(var(--primary-glow))" : undefined,
-            }}
-          >
-            {i === 0 && (
-              <div className="w-full h-full relative">
-                <span className="absolute top-1 left-1 w-1.5 h-1.5 rounded-full bg-white" />
-                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-white" />
-              </div>
-            )}
-          </div>
-        ))}
+        {snake.map((s, i) => {
+          const isHead = i === 0;
+          const isTail = i === snake.length - 1;
+          // rotation for head based on direction
+          const rot = dir === "up" ? -90 : dir === "down" ? 90 : dir === "left" ? 180 : 0;
+          return (
+            <div
+              key={i}
+              className={cn(
+                "absolute transition-[left,top] duration-100",
+              )}
+              style={{
+                left: `${s.x * cellPx}%`,
+                top: `${s.y * cellPxY}%`,
+                width: `${cellPx}%`,
+                height: `${cellPxY}%`,
+                zIndex: isHead ? 20 : 10 - Math.min(i, 9),
+              }}
+            >
+              {isHead ? (
+                <div
+                  className="w-full h-full relative"
+                  style={{ transform: `rotate(${rot}deg)` }}
+                >
+                  {/* head shape */}
+                  <div
+                    className="absolute inset-0 rounded-[40%]"
+                    style={{
+                      background:
+                        "radial-gradient(circle at 30% 30%, hsl(var(--snake-head)) 0%, hsl(var(--snake-body)) 100%)",
+                      boxShadow:
+                        "0 0 10px hsl(var(--primary-glow) / 0.6), inset -2px -2px 4px rgba(0,0,0,0.2)",
+                    }}
+                  />
+                  {/* eyes */}
+                  <span className="absolute top-[18%] right-[18%] w-[22%] h-[22%] rounded-full bg-white flex items-center justify-center">
+                    <span className="w-[55%] h-[55%] rounded-full bg-black" />
+                  </span>
+                  <span className="absolute bottom-[18%] right-[18%] w-[22%] h-[22%] rounded-full bg-white flex items-center justify-center">
+                    <span className="w-[55%] h-[55%] rounded-full bg-black" />
+                  </span>
+                  {/* tongue */}
+                  <span
+                    className="absolute top-1/2 -right-[30%] w-[35%] h-[10%] -translate-y-1/2 animate-pulse"
+                    style={{
+                      background: "hsl(0 80% 55%)",
+                      clipPath: "polygon(0 40%, 70% 40%, 70% 0, 100% 50%, 70% 100%, 70% 60%, 0 60%)",
+                    }}
+                  />
+                </div>
+              ) : (
+                <div
+                  className={cn("absolute rounded-full", isTail ? "inset-[18%]" : "inset-[8%]")}
+                  style={{
+                    background: `radial-gradient(circle at 35% 35%, hsl(var(--snake-body)) 0%, hsl(var(--snake-head)) 100%)`,
+                    boxShadow: "inset -1px -1px 3px rgba(0,0,0,0.25), 0 1px 2px rgba(0,0,0,0.15)",
+                  }}
+                >
+                  {/* scale dot */}
+                  <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[35%] h-[35%] rounded-full bg-white/20" />
+                </div>
+              )}
+            </div>
+          );
+        })}
 
         {popCell && (
           <div
