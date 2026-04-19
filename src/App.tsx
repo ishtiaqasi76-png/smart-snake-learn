@@ -7,6 +7,7 @@ import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import LevelSelect from "./pages/LevelSelect.tsx";
 import Play from "./pages/Play.tsx";
+import AdMobBanner from "./components/AdMobBanner";
 
 const queryClient = new QueryClient();
 
@@ -16,6 +17,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <AdMobBanner />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/levels/:category" element={<LevelSelect />} />
