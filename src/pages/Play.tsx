@@ -1,10 +1,11 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { findSubLevel, LevelCategory } from "@/game/levels";
 import { SnakeBoard } from "@/components/SnakeBoard";
 import { saveStars, unlockSticker } from "@/game/storage";
 import { Star } from "@/components/Star";
 import { sounds } from "@/game/sounds";
+import { prepareInterstitial, showInterstitial } from "@/game/interstitial";
 
 const STICKERS = ["🦄", "🌟", "🦖", "🐼", "🚀", "🍩", "🐙", "🦋", "🍉"];
 
@@ -14,6 +15,11 @@ const Play = () => {
   const { level, subLevel } = findSubLevel(category as LevelCategory, subId ?? "");
 
   const [result, setResult] = useState<null | { stars: number; correct: number; wrong: number; sticker?: string }>(null);
+
+  // Pre-load an interstitial as soon as a level starts so it's ready on finish
+  useEffect(() => {
+    void prepareInterstitial();
+  }, []);
 
   if (!level || !subLevel) {
     return (
@@ -34,6 +40,8 @@ const Play = () => {
       unlockSticker(sticker);
     }
     setResult({ stars, correct, wrong, sticker });
+    // Show interstitial after the result screen appears
+    void showInterstitial();
   };
 
   if (result) {
