@@ -93,6 +93,7 @@ const Play = () => {
 
   return (
     <div className="min-h-screen gradient-sky">
+      <ExtraAdBanner />
       <SnakeBoard
         subLevel={subLevel}
         category={level.id}
