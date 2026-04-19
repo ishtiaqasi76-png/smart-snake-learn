@@ -23,7 +23,14 @@ const LevelSelect = () => {
       <div className="w-full max-w-md flex items-center gap-3 mb-4">
         <button onClick={() => navigate("/")} className="kid-btn bg-card px-4 py-2">←</button>
         <h2 className="text-2xl font-extrabold flex items-center gap-2">
-          <span className="text-3xl">{level.emoji}</span> {level.title}
+          <img
+            src={level.image}
+            alt={`${level.title} icon`}
+            width={48}
+            height={48}
+            className="w-12 h-12 object-contain"
+          />
+          {level.title}
         </h2>
       </div>
 
@@ -37,8 +44,18 @@ const LevelSelect = () => {
               className="kid-btn bg-card p-5 text-left flex items-center gap-4 animate-scale-in"
               style={{ animationDelay: `${i * 80}ms` }}
             >
-              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-extrabold ${level.color} text-primary-foreground`}>
-                {i + 1}
+              <div className={`relative w-16 h-16 rounded-2xl flex items-center justify-center overflow-hidden ${level.color}`}>
+                <img
+                  src={level.image}
+                  alt={`${level.title} illustration`}
+                  width={64}
+                  height={64}
+                  loading="lazy"
+                  className="w-full h-full object-contain p-1"
+                />
+                <span className="absolute bottom-0 right-0 bg-card text-foreground text-xs font-extrabold rounded-tl-lg px-1.5 py-0.5 shadow">
+                  {i + 1}
+                </span>
               </div>
               <div className="flex-1">
                 <div className={`text-xl font-extrabold ${sub.fontClass ?? ""}`}>{sub.title}</div>

@@ -57,8 +57,15 @@ const Home = () => {
               style={{ animationDelay: `${i * 80}ms` }}
               aria-label={`Play ${lvl.title}`}
             >
-              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-4xl ${lvl.color}`}>
-                {lvl.emoji}
+              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center overflow-hidden ${lvl.color}`}>
+                <img
+                  src={lvl.image}
+                  alt={`${lvl.title} icon`}
+                  width={64}
+                  height={64}
+                  loading="lazy"
+                  className="w-full h-full object-contain p-1"
+                />
               </div>
               <div className="flex-1">
                 <div className="text-xl font-extrabold">{lvl.title}</div>

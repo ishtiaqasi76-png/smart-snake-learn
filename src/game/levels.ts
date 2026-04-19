@@ -1,3 +1,7 @@
+import countingImg from "@/assets/level-counting.png";
+import abcImg from "@/assets/level-abc.png";
+import urduImg from "@/assets/level-urdu.png";
+
 export type LevelCategory = "counting" | "abc" | "urdu";
 
 export interface SubLevel {
@@ -15,6 +19,7 @@ export interface Level {
   title: string;
   emoji: string;
   color: string; // tailwind bg class
+  image: string; // illustration for the category
   subLevels: SubLevel[];
 }
 
@@ -34,6 +39,7 @@ export const LEVELS: Level[] = [
     title: "Counting",
     emoji: "🔢",
     color: "bg-secondary",
+    image: countingImg,
     subLevels: [
       { id: "c1", title: "1 to 20", sequence: range(1, 20), speedMs: 260, itemsOnBoard: 4 },
       { id: "c2", title: "1 to 50", sequence: range(1, 50), speedMs: 220, itemsOnBoard: 5 },
@@ -45,6 +51,7 @@ export const LEVELS: Level[] = [
     title: "Alphabets",
     emoji: "🔤",
     color: "bg-accent",
+    image: abcImg,
     subLevels: [
       { id: "a1", title: "A to Z", subtitle: "Uppercase", sequence: ALPHA_UPPER, speedMs: 240, itemsOnBoard: 5 },
       { id: "a2", title: "a to z", subtitle: "Lowercase", sequence: ALPHA_LOWER, speedMs: 220, itemsOnBoard: 5 },
@@ -56,6 +63,7 @@ export const LEVELS: Level[] = [
     title: "Urdu",
     emoji: "🇵🇰",
     color: "bg-primary",
+    image: urduImg,
     subLevels: [
       { id: "u1", title: "ا سے ے", subtitle: "Basic", sequence: URDU, speedMs: 260, itemsOnBoard: 5, fontClass: "urdu" },
       { id: "u2", title: "آوازوں کے ساتھ", subtitle: "With sounds", sequence: URDU, speedMs: 240, itemsOnBoard: 5, fontClass: "urdu" },
