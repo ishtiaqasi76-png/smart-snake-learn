@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { SubLevel } from "@/game/levels";
+import { SubLevel, LevelCategory } from "@/game/levels";
 import { sounds } from "@/game/sounds";
+import { speech } from "@/game/speech";
 import { cn } from "@/lib/utils";
 
 type Dir = "up" | "down" | "left" | "right";
@@ -9,6 +10,7 @@ type Item = Cell & { value: string; id: number };
 
 interface Props {
   subLevel: SubLevel;
+  category: LevelCategory;
   onFinish: (result: { correct: number; wrong: number; completed: boolean }) => void;
   onExit: () => void;
 }
@@ -26,7 +28,7 @@ const eqCell = (a: Cell, b: Cell) => a.x === b.x && a.y === b.y;
 
 let itemSeq = 0;
 
-export const SnakeBoard = ({ subLevel, onExit, onFinish }: Props) => {
+export const SnakeBoard = ({ subLevel, category, onExit, onFinish }: Props) => {
   const [snake, setSnake] = useState<Cell[]>(() => [
     { x: 7, y: 9 },
     { x: 6, y: 9 },
@@ -71,9 +73,15 @@ export const SnakeBoard = ({ subLevel, onExit, onFinish }: Props) => {
     [subLevel]
   );
 
-  // initial spawn
+  // initial spawn + speak the first target
   useEffect(() => {
     spawnItems(snake, 0);
+    const first = subLevel.sequence[0];
+    if (first !== undefined) {
+      // small delay so voices are loaded
+      setTimeout(() => speech.speak(first, category), 250);
+    }
+    return () => speech.cancel();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subLevel.id]);
 
@@ -146,6 +154,8 @@ export const SnakeBoard = ({ subLevel, onExit, onFinish }: Props) => {
         if (hit) {
           if (hit.value === target) {
             sounds.eat();
+            // Speak the value the snake just ate
+            speech.speak(hit.value, category);
             setPopCell({ x: hit.x, y: hit.y });
             setTimeout(() => setPopCell(null), 300);
             setCorrect((c) => c + 1);
@@ -163,6 +173,11 @@ export const SnakeBoard = ({ subLevel, onExit, onFinish }: Props) => {
             setTargetIdx(nextIdx);
             // respawn items based on the new snake position
             setTimeout(() => spawnItems(newSnake, nextIdx), 0);
+            // Speak next target shortly after
+            const nextVal = subLevel.sequence[nextIdx];
+            if (nextVal !== undefined) {
+              setTimeout(() => speech.speak(nextVal, category), 700);
+            }
             return newSnake;
           } else {
             sounds.wrong();
