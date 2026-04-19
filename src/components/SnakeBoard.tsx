@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { SubLevel } from "@/game/levels";
+import { SubLevel, LevelCategory } from "@/game/levels";
 import { sounds } from "@/game/sounds";
+import { speech } from "@/game/speech";
 import { cn } from "@/lib/utils";
 
 type Dir = "up" | "down" | "left" | "right";
@@ -9,6 +10,7 @@ type Item = Cell & { value: string; id: number };
 
 interface Props {
   subLevel: SubLevel;
+  category: LevelCategory;
   onFinish: (result: { correct: number; wrong: number; completed: boolean }) => void;
   onExit: () => void;
 }
