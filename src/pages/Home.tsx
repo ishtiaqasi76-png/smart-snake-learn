@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { LEVELS } from "@/game/levels";
 import { loadProgress } from "@/game/storage";
 import { sounds } from "@/game/sounds";
+import schoolHero from "@/assets/school-hero.jpg";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -15,11 +16,19 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen gradient-sky flex flex-col items-center px-4 py-8">
-      <header className="w-full max-w-md text-center mb-6 animate-fade-in">
-        <div className="text-6xl mb-2 animate-float">🐍</div>
+    <div className="min-h-screen gradient-sky flex flex-col items-center px-4 py-6">
+      <header className="w-full max-w-md text-center mb-5 animate-fade-in">
+        <div className="rounded-3xl overflow-hidden shadow-xl border-4 border-primary/30 mb-4">
+          <img
+            src={schoolHero}
+            alt="Happy children walking to school on a sunny morning"
+            width={1536}
+            height={1024}
+            className="w-full h-auto block"
+          />
+        </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight">
-          Smart Snake
+          🐍 Smart Snake
         </h1>
         <p className="text-muted-foreground font-semibold">Kids Learning Game</p>
       </header>
