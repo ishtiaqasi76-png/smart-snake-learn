@@ -7,6 +7,7 @@ import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import LevelSelect from "./pages/LevelSelect.tsx";
 import Play from "./pages/Play.tsx";
+import Download from "./pages/Download.tsx";
 import AdMobBanner from "./components/AdMobBanner";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/levels/:category" element={<LevelSelect />} />
           <Route path="/play/:category/:subId" element={<Play />} />
+          <Route path="/download" element={<Download />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
