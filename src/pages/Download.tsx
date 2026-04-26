@@ -1,9 +1,10 @@
 import { useNavigate } from "react-router-dom";
 
-// 👇 YAHAN APNI APK DOWNLOAD LINK PASTE KAREIN
-// Misal: "https://drive.google.com/uc?export=download&id=YOUR_FILE_ID"
-// Ya GitHub Releases ki direct .apk link
-const APK_DOWNLOAD_URL = "https://drive.google.com/uc?export=download&id=REPLACE_WITH_YOUR_FILE_ID";
+// 👇 YAHAN apna GitHub username daalein (repo ka naam: smart-snake-learn)
+// Misal: agar username "ahmed123" hai to:
+// https://github.com/ahmed123/smart-snake-learn/releases/latest/download/smart-snake-learn.apk
+const GITHUB_USERNAME = "YOUR_GITHUB_USERNAME";
+const APK_DOWNLOAD_URL = `https://github.com/${GITHUB_USERNAME}/smart-snake-learn/releases/latest/download/smart-snake-learn.apk`;
 
 const Download = () => {
   const navigate = useNavigate();
