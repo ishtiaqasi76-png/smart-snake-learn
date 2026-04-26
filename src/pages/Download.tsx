@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 // 👇 YAHAN apna GitHub username daalein (repo ka naam: smart-snake-learn)
 // Misal: agar username "ahmed123" hai to:
 // https://github.com/ahmed123/smart-snake-learn/releases/latest/download/smart-snake-learn.apk
-const GITHUB_USERNAME = "smart-snake-learn";
+const GITHUB_USERNAME = "ishtiaqasi76-png";
 const APK_DOWNLOAD_URL = `https://github.com/${GITHUB_USERNAME}/smart-snake-learn/releases/latest/download/smart-snake-learn.apk`;
 
 const Download = () => {
