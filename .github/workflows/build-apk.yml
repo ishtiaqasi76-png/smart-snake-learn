@@ -7,7 +7,7 @@ on:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  REQUIRED_NODE_MAJOR: 22
+  REQUIRED_NODE_MAJOR: 24
 
 jobs:
   build:
@@ -17,13 +17,22 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        run: |
+          git init .
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git fetch --depth=1 origin "${GITHUB_SHA}"
+          git checkout --force FETCH_HEAD
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-          cache: 'npm'
+      - name: Install Node.js 24
+        run: |
+          FILE="$(curl -fsSL https://nodejs.org/dist/latest-v24.x/SHASUMS256.txt | awk '/linux-x64.tar.xz$/ {print $2; exit}')"
+          VERSION="${FILE#node-}"
+          VERSION="${VERSION%-linux-x64.tar.xz}"
+          curl -fsSLO "https://nodejs.org/dist/latest-v24.x/${FILE}"
+          tar -xJf "${FILE}" -C "${RUNNER_TEMP}"
+          echo "${RUNNER_TEMP}/node-${VERSION}-linux-x64/bin" >> "$GITHUB_PATH"
 
       - name: Verify Node version
         run: |
@@ -38,16 +47,21 @@ jobs:
           fi
 
       - name: Setup Java JDK
-        uses: actions/setup-java@v5
-        with:
-          distribution: 'temurin'
-          java-version: '21'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openjdk-17-jdk
+          echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> "$GITHUB_ENV"
+          echo "/usr/lib/jvm/java-17-openjdk-amd64/bin" >> "$GITHUB_PATH"
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v4
-        with:
-          api-level: 34
-          build-tools: 34.0.0
+        run: |
+          ANDROID_HOME="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          echo "ANDROID_HOME=${ANDROID_HOME}" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=${ANDROID_HOME}" >> "$GITHUB_ENV"
+          echo "${ANDROID_HOME}/platform-tools" >> "$GITHUB_PATH"
+          echo "${ANDROID_HOME}/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          yes | "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Install dependencies
         run: npm install
@@ -80,18 +94,10 @@ jobs:
           mkdir -p output
           cp android/app/build/outputs/apk/debug/app-debug.apk output/smart-snake-learn.apk
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: smart-snake-learn-apk
-          path: output/smart-snake-learn.apk
-
       - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: build-${{ github.run_number }}
-          name: APK Build ${{ github.run_number }}
-          files: output/smart-snake-learn.apk
-          generate_release_notes: true
+        run: |
+          gh release create "build-${{ github.run_number }}" output/smart-snake-learn.apk \
+            --title "APK Build ${{ github.run_number }}" \
+            --notes "Automated Android APK build."
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
