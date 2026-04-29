@@ -71,7 +71,7 @@ jobs:
 
       - name: Add Android platform
         run: |
-          node -e "const major = Number(process.versions.node.split('.')[0]); if (major < Number(process.env.REQUIRED_NODE_MAJOR)) { console.error(`Capacitor needs Node.js ${process.env.REQUIRED_NODE_MAJOR} or newer, but this step is using ${process.version}.`); process.exit(1); }"
+          node -e 'const major = Number(process.versions.node.split(".")[0]); if (major < Number(process.env.REQUIRED_NODE_MAJOR)) { console.error("Capacitor needs Node.js " + process.env.REQUIRED_NODE_MAJOR + " or newer, but this step is using " + process.version + "."); process.exit(1); }'
           node ./node_modules/@capacitor/cli/bin/capacitor --version
           if [ ! -d "android" ]; then
             node ./node_modules/@capacitor/cli/bin/capacitor add android
@@ -79,7 +79,7 @@ jobs:
 
       - name: Sync Capacitor
         run: |
-          node -e "const major = Number(process.versions.node.split('.')[0]); if (major < Number(process.env.REQUIRED_NODE_MAJOR)) { console.error(`Capacitor needs Node.js ${process.env.REQUIRED_NODE_MAJOR} or newer, but this step is using ${process.version}.`); process.exit(1); }"
+          node -e 'const major = Number(process.versions.node.split(".")[0]); if (major < Number(process.env.REQUIRED_NODE_MAJOR)) { console.error("Capacitor needs Node.js " + process.env.REQUIRED_NODE_MAJOR + " or newer, but this step is using " + process.version + "."); process.exit(1); }'
           node ./node_modules/@capacitor/cli/bin/capacitor sync android
 
       - name: Make gradlew executable
