@@ -25,7 +25,9 @@ jobs:
 
       - name: Verify Node version
         run: |
+          which node
           node -v
+          which npm
           npm -v
 
       - name: Setup Java JDK
@@ -43,20 +45,21 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Install Capacitor CLI & Android
-        run: npm install --save-dev @capacitor/cli && npm install @capacitor/core @capacitor/android
-
       - name: Build web app
         run: npm run build
 
       - name: Add Android platform
         run: |
+          export PATH="$(dirname $(which node)):$PATH"
+          ./node_modules/.bin/cap --version
           if [ ! -d "android" ]; then
-            npx cap add android
+            node ./node_modules/@capacitor/cli/bin/capacitor add android
           fi
 
       - name: Sync Capacitor
-        run: npx cap sync android
+        run: |
+          export PATH="$(dirname $(which node)):$PATH"
+          node ./node_modules/@capacitor/cli/bin/capacitor sync android
 
       - name: Make gradlew executable
         run: chmod +x android/gradlew
