@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { QRCodeSVG } from "qrcode.react";
 
 // 👇 YAHAN apna GitHub username daalein (repo ka naam: smart-snake-learn)
 // Misal: agar username "ahmed123" hai to:
@@ -31,6 +32,21 @@ const Download = () => {
         >
           ⬇️ Download APK
         </button>
+
+        <div className="bg-card border-2 border-border rounded-2xl p-4 mb-4 flex flex-col items-center">
+          <div className="font-bold text-foreground mb-2">📲 QR Code se download karein</div>
+          <div className="bg-white p-3 rounded-xl">
+            <QRCodeSVG
+              value={APK_DOWNLOAD_URL}
+              size={180}
+              level="M"
+              includeMargin={false}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground font-semibold mt-2 text-center">
+            Phone camera se scan karein
+          </p>
+        </div>
 
         <div className="text-left bg-muted/50 rounded-xl p-4 mb-4 text-sm">
           <div className="font-bold mb-2">📋 Install karne ka tareeqa:</div>
