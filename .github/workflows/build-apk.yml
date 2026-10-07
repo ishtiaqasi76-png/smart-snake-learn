@@ -85,6 +85,28 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
+      - name: Inject release signing config into build.gradle
+        run: |
+          node -e '
+          const fs = require("fs");
+          const p = "android/app/build.gradle";
+          let s = fs.readFileSync(p, "utf8");
+          const signingBlock = `
+    signingConfigs {
+        release {
+            storeFile file(System.getenv("KEYSTORE_FILE") ?: "smart-snake.keystore")
+            storePassword System.getenv("KEYSTORE_PASSWORD")
+            keyAlias System.getenv("KEY_ALIAS")
+            keyPassword System.getenv("KEY_PASSWORD")
+        }
+    }
+`;
+          s = s.replace(/android\s*\{/, "android {" + signingBlock);
+          s = s.replace(/(buildTypes\s*\{[\s\S]*?release\s*\{)/, "$1\n            signingConfig signingConfigs.release");
+          fs.writeFileSync(p, s);
+          console.log("signing config injected");
+          '
+
       - name: Decode signing keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/smart-snake.keystore
