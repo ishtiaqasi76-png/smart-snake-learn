@@ -290,8 +290,6 @@ export const SnakeBoard = ({ subLevel, category, onExit, onFinish }: Props) => {
           const isHead = i === 0;
           const isTail = i === snake.length - 1;
           const rot = dir === "up" ? -90 : dir === "down" ? 90 : dir === "left" ? 180 : 0;
-          // alternating scale pattern for realism
-          const scaleShade = i % 2 === 0 ? "var(--snake-body)" : "var(--snake-head)";
           return (
             <div
               key={i}
