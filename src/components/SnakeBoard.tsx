@@ -251,19 +251,37 @@ export const SnakeBoard = ({ subLevel, category, onExit, onFinish }: Props) => {
         {items.map((it) => (
           <div
             key={it.id}
-            className={cn(
-              "absolute flex items-center justify-center font-extrabold rounded-full shadow-md animate-scale-in",
-              it.value === target ? "bg-warning text-warning-foreground ring-2 ring-warning/60 animate-pop" : "bg-card text-foreground"
-            )}
+            className="absolute flex items-center justify-center animate-scale-in"
             style={{
               left: `${it.x * cellPx}%`,
               top: `${it.y * cellPxY}%`,
               width: `${cellPx}%`,
               height: `${cellPxY}%`,
-              fontSize: "clamp(10px, 2.4vw, 18px)",
+              transform: "translateZ(28px)",
+              transformStyle: "preserve-3d",
             }}
           >
-            <span className={fontClass}>{it.value}</span>
+            {/* ground shadow */}
+            <span
+              className="absolute rounded-full bg-black/40 blur-[3px]"
+              style={{ width: "80%", height: "26%", bottom: "-8%", left: "10%", transform: "translateZ(-26px)" }}
+            />
+            {/* 3D ball */}
+            <span
+              className={cn("flex items-center justify-center font-extrabold rounded-full", it.value === target && "animate-pop")}
+              style={{
+                width: "92%",
+                height: "92%",
+                fontSize: "clamp(10px, 2.4vw, 18px)",
+                color: "hsl(30 100% 12%)",
+                background:
+                  "radial-gradient(circle at 32% 28%, hsl(48 100% 80%) 0%, hsl(45 98% 55%) 45%, hsl(35 95% 40%) 100%)",
+                boxShadow:
+                  "inset -3px -5px 8px rgba(0,0,0,0.35), inset 3px 4px 6px rgba(255,255,255,0.55), 0 6px 10px rgba(0,0,0,0.35), 0 0 14px hsl(45 100% 60% / 0.5)",
+              }}
+            >
+              <span className={fontClass} style={{ textShadow: "0 1px 0 rgba(255,255,255,0.5)" }}>{it.value}</span>
+            </span>
           </div>
         ))}
 
