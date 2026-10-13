@@ -225,10 +225,11 @@ export const SnakeBoard = ({ subLevel, category, onExit, onFinish }: Props) => {
         <span className="text-destructive">✗ {wrong}</span>
       </div>
 
-      {/* Board */}
+      {/* Board — 3D tilted table */}
+      <div style={{ perspective: "900px" }} className="w-full max-w-md">
       <div
         className={cn(
-          "relative w-full max-w-md aspect-[14/18] rounded-[var(--radius)] overflow-hidden border-4 border-primary/30",
+          "relative w-full aspect-[14/18] rounded-[var(--radius)] overflow-hidden border-4 border-primary/30",
           shake && "animate-shake"
         )}
         style={{
@@ -236,29 +237,51 @@ export const SnakeBoard = ({ subLevel, category, onExit, onFinish }: Props) => {
           backgroundSize: "cover",
           backgroundPosition: "center",
           touchAction: "none",
+          transform: "rotateX(22deg)",
+          transformStyle: "preserve-3d",
+          boxShadow:
+            "0 30px 50px -12px rgba(0,0,0,0.55), 0 12px 24px rgba(0,0,0,0.35), inset 0 0 60px rgba(0,0,0,0.15)",
         }}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
-        {/* subtle overlay for contrast */}
-        <div className="absolute inset-0 bg-background/10 pointer-events-none" />
+        {/* depth vignette + light from top */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.28) 100%)" }} />
         {/* items */}
         {items.map((it) => (
           <div
             key={it.id}
-            className={cn(
-              "absolute flex items-center justify-center font-extrabold rounded-full shadow-md animate-scale-in",
-              it.value === target ? "bg-warning text-warning-foreground ring-2 ring-warning/60 animate-pop" : "bg-card text-foreground"
-            )}
+            className="absolute flex items-center justify-center animate-scale-in"
             style={{
               left: `${it.x * cellPx}%`,
               top: `${it.y * cellPxY}%`,
               width: `${cellPx}%`,
               height: `${cellPxY}%`,
-              fontSize: "clamp(10px, 2.4vw, 18px)",
+              transform: "translateZ(28px)",
+              transformStyle: "preserve-3d",
             }}
           >
-            <span className={fontClass}>{it.value}</span>
+            {/* ground shadow */}
+            <span
+              className="absolute rounded-full bg-black/40 blur-[3px]"
+              style={{ width: "80%", height: "26%", bottom: "-8%", left: "10%", transform: "translateZ(-26px)" }}
+            />
+            {/* 3D ball */}
+            <span
+              className={cn("flex items-center justify-center font-extrabold rounded-full", it.value === target && "animate-pop")}
+              style={{
+                width: "92%",
+                height: "92%",
+                fontSize: "clamp(10px, 2.4vw, 18px)",
+                color: "hsl(30 100% 12%)",
+                background:
+                  "radial-gradient(circle at 32% 28%, hsl(48 100% 80%) 0%, hsl(45 98% 55%) 45%, hsl(35 95% 40%) 100%)",
+                boxShadow:
+                  "inset -3px -5px 8px rgba(0,0,0,0.35), inset 3px 4px 6px rgba(255,255,255,0.55), 0 6px 10px rgba(0,0,0,0.35), 0 0 14px hsl(45 100% 60% / 0.5)",
+              }}
+            >
+              <span className={fontClass} style={{ textShadow: "0 1px 0 rgba(255,255,255,0.5)" }}>{it.value}</span>
+            </span>
           </div>
         ))}
 
@@ -279,8 +302,21 @@ export const SnakeBoard = ({ subLevel, category, onExit, onFinish }: Props) => {
                 width: `${cellPx}%`,
                 height: `${cellPxY}%`,
                 zIndex: isHead ? 30 : 20 - Math.min(i, 18),
+                transform: `translateZ(${isHead ? 34 : 22}px)`,
+                transformStyle: "preserve-3d",
               }}
             >
+              {/* soft ground shadow for 3D depth */}
+              <span
+                className="absolute rounded-full bg-black/45 blur-[4px] pointer-events-none"
+                style={{
+                  width: "85%",
+                  height: "30%",
+                  left: "8%",
+                  bottom: "-10%",
+                  transform: `translateZ(${isHead ? -32 : -20}px)`,
+                }}
+              />
               {isHead ? (
                 <div
                   className="w-full h-full relative"
@@ -347,11 +383,11 @@ export const SnakeBoard = ({ subLevel, category, onExit, onFinish }: Props) => {
                 <div
                   className="absolute inset-0"
                   style={{
-                    background: `radial-gradient(circle at 35% 35%, hsl(${scaleShade}) 0%, hsl(var(--snake-head)) 100%)`,
-                    borderRadius: isTail ? "50% 50% 50% 50% / 60% 60% 50% 50%" : "45%",
+                    background: `radial-gradient(circle at 32% 28%, hsl(145 90% 62%) 0%, hsl(${scaleShade}) 45%, hsl(var(--snake-head)) 100%)`,
+                    borderRadius: "50%",
                     boxShadow:
-                      "inset -2px -2px 4px rgba(0,0,0,0.3), inset 2px 2px 3px rgba(255,255,255,0.25), 0 1px 2px rgba(0,0,0,0.2)",
-                    transform: isTail ? "scale(0.85)" : "scale(1.05)",
+                      "inset -3px -5px 7px rgba(0,0,0,0.4), inset 3px 4px 5px rgba(255,255,255,0.4), 0 5px 8px rgba(0,0,0,0.3)",
+                    transform: isTail ? "scale(0.8)" : "scale(1.08)",
                   }}
                 >
                   {/* belly scale stripe */}
@@ -387,6 +423,7 @@ export const SnakeBoard = ({ subLevel, category, onExit, onFinish }: Props) => {
             </div>
           </div>
         )}
+      </div>
       </div>
 
       {/* Direction pad */}
