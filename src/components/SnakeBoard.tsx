@@ -320,61 +320,77 @@ export const SnakeBoard = ({ subLevel, category, onExit, onFinish }: Props) => {
               {isHead ? (
                 <div
                   className="w-full h-full relative"
-                  style={{ transform: `rotate(${rot}deg) scale(1.35)`, transformOrigin: "center" }}
+                  style={{ transform: `rotate(${rot}deg) scale(1.45)`, transformOrigin: "center" }}
                 >
-                  {/* cobra hood */}
+                  {/* viper head — triangular, keeled scales */}
                   <div
                     className="absolute"
                     style={{
-                      left: "-15%",
-                      top: "10%",
-                      width: "70%",
-                      height: "80%",
-                      background: `radial-gradient(ellipse at center, hsl(145 75% 40%) 0%, hsl(145 80% 28%) 100%)`,
-                      borderRadius: "60% 30% 60% 30%",
-                      boxShadow: "inset 0 -3px 6px rgba(0,0,0,0.35)",
-                    }}
-                  />
-                  {/* head shape (oval) */}
-                  <div
-                    className="absolute"
-                    style={{
-                      left: "25%",
-                      top: "15%",
-                      width: "75%",
-                      height: "70%",
+                      left: "12%",
+                      top: "8%",
+                      width: "88%",
+                      height: "84%",
                       background:
-                        "radial-gradient(circle at 70% 35%, hsl(145 85% 55%) 0%, hsl(145 80% 32%) 100%)",
-                      borderRadius: "55% 70% 55% 70%",
-                      boxShadow:
-                        "0 0 10px hsl(var(--primary-glow) / 0.6), inset -3px -3px 6px rgba(0,0,0,0.3), inset 2px 2px 4px rgba(255,255,255,0.2)",
+                        "radial-gradient(circle at 68% 32%, hsl(95 70% 48%) 0%, hsl(110 60% 34%) 55%, hsl(120 55% 22%) 100%)",
+                      clipPath: "polygon(0 50%, 25% 8%, 60% 0, 100% 22%, 100% 78%, 60% 100%, 25% 92%)",
+                      boxShadow: "inset -3px -4px 7px rgba(0,0,0,0.4), inset 2px 3px 5px rgba(255,255,255,0.25)",
                     }}
                   />
-                  {/* hood pattern (cobra mark) */}
+                  {/* scale texture overlay */}
+                  <div
+                    className="absolute"
+                    style={{
+                      left: "12%",
+                      top: "8%",
+                      width: "88%",
+                      height: "84%",
+                      clipPath: "polygon(0 50%, 25% 8%, 60% 0, 100% 22%, 100% 78%, 60% 100%, 25% 92%)",
+                      backgroundImage:
+                        "repeating-linear-gradient(45deg, rgba(0,0,0,0.22) 0 2px, transparent 2px 5px), repeating-linear-gradient(-45deg, rgba(0,0,0,0.18) 0 2px, transparent 2px 5px)",
+                      opacity: 0.7,
+                    }}
+                  />
+                  {/* dark dorsal stripe */}
                   <span
                     className="absolute"
                     style={{
-                      left: "0%",
-                      top: "38%",
-                      width: "35%",
-                      height: "24%",
-                      background: "hsl(45 90% 55%)",
+                      left: "10%",
+                      top: "42%",
+                      width: "70%",
+                      height: "16%",
+                      background: "linear-gradient(90deg, hsl(120 60% 15%), hsl(110 55% 22%))",
                       borderRadius: "50%",
-                      opacity: 0.85,
+                      opacity: 0.8,
                     }}
                   />
-                  {/* eyes */}
-                  <span className="absolute top-[22%] right-[18%] w-[18%] h-[18%] rounded-full bg-white flex items-center justify-center shadow-sm">
-                    <span className="w-[55%] h-[80%] rounded-full bg-black" />
+                  {/* yellow viper eyes with vertical pupils */}
+                  <span
+                    className="absolute flex items-center justify-center rounded-full"
+                    style={{
+                      top: "24%", right: "16%", width: "20%", height: "20%",
+                      background: "radial-gradient(circle at 40% 35%, hsl(55 100% 65%), hsl(45 95% 45%))",
+                      boxShadow: "0 0 4px rgba(0,0,0,0.6), inset 0 0 2px rgba(0,0,0,0.5)",
+                    }}
+                  >
+                    <span style={{ width: "22%", height: "75%", background: "#000", borderRadius: "50%" }} />
                   </span>
-                  <span className="absolute bottom-[22%] right-[18%] w-[18%] h-[18%] rounded-full bg-white flex items-center justify-center shadow-sm">
-                    <span className="w-[55%] h-[80%] rounded-full bg-black" />
+                  <span
+                    className="absolute flex items-center justify-center rounded-full"
+                    style={{
+                      bottom: "24%", right: "16%", width: "20%", height: "20%",
+                      background: "radial-gradient(circle at 40% 35%, hsl(55 100% 65%), hsl(45 95% 45%))",
+                      boxShadow: "0 0 4px rgba(0,0,0,0.6), inset 0 0 2px rgba(0,0,0,0.5)",
+                    }}
+                  >
+                    <span style={{ width: "22%", height: "75%", background: "#000", borderRadius: "50%" }} />
                   </span>
+                  {/* nostril */}
+                  <span className="absolute rounded-full bg-black/70" style={{ top: "46%", right: "2%", width: "7%", height: "7%" }} />
                   {/* forked tongue */}
                   <span
-                    className="absolute top-1/2 -right-[35%] w-[40%] h-[12%] -translate-y-1/2 animate-pulse"
+                    className="absolute top-1/2 -right-[32%] w-[36%] h-[10%] -translate-y-1/2 animate-pulse"
                     style={{
-                      background: "hsl(0 85% 55%)",
+                      background: "hsl(0 85% 50%)",
                       clipPath: "polygon(0 35%, 60% 35%, 60% 0, 100% 50%, 60% 100%, 60% 65%, 0 65%)",
                     }}
                   />
