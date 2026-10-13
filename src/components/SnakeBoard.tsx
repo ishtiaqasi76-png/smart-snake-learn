@@ -424,6 +424,7 @@ export const SnakeBoard = ({ subLevel, category, onExit, onFinish }: Props) => {
           </div>
         )}
       </div>
+      </div>
 
       {/* Direction pad */}
       <div className="w-44 grid grid-cols-3 gap-2 mt-1 select-none">
