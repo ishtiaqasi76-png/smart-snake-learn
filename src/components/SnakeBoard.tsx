@@ -383,11 +383,11 @@ export const SnakeBoard = ({ subLevel, category, onExit, onFinish }: Props) => {
                 <div
                   className="absolute inset-0"
                   style={{
-                    background: `radial-gradient(circle at 35% 35%, hsl(${scaleShade}) 0%, hsl(var(--snake-head)) 100%)`,
-                    borderRadius: isTail ? "50% 50% 50% 50% / 60% 60% 50% 50%" : "45%",
+                    background: `radial-gradient(circle at 32% 28%, hsl(145 90% 62%) 0%, hsl(${scaleShade}) 45%, hsl(var(--snake-head)) 100%)`,
+                    borderRadius: "50%",
                     boxShadow:
-                      "inset -2px -2px 4px rgba(0,0,0,0.3), inset 2px 2px 3px rgba(255,255,255,0.25), 0 1px 2px rgba(0,0,0,0.2)",
-                    transform: isTail ? "scale(0.85)" : "scale(1.05)",
+                      "inset -3px -5px 7px rgba(0,0,0,0.4), inset 3px 4px 5px rgba(255,255,255,0.4), 0 5px 8px rgba(0,0,0,0.3)",
+                    transform: isTail ? "scale(0.8)" : "scale(1.08)",
                   }}
                 >
                   {/* belly scale stripe */}
