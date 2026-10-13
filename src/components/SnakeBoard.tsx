@@ -399,21 +399,39 @@ export const SnakeBoard = ({ subLevel, category, onExit, onFinish }: Props) => {
                 <div
                   className="absolute inset-0"
                   style={{
-                    background: `radial-gradient(circle at 32% 28%, hsl(145 90% 62%) 0%, hsl(${scaleShade}) 45%, hsl(var(--snake-head)) 100%)`,
+                    background: `radial-gradient(circle at 32% 28%, hsl(100 75% 52%) 0%, hsl(115 60% 36%) 50%, hsl(125 55% 22%) 100%)`,
                     borderRadius: "50%",
                     boxShadow:
-                      "inset -3px -5px 7px rgba(0,0,0,0.4), inset 3px 4px 5px rgba(255,255,255,0.4), 0 5px 8px rgba(0,0,0,0.3)",
-                    transform: isTail ? "scale(0.8)" : "scale(1.08)",
+                      "inset -3px -5px 7px rgba(0,0,0,0.45), inset 3px 4px 5px rgba(255,255,255,0.3), 0 5px 8px rgba(0,0,0,0.35)",
+                    transform: isTail ? "scale(0.7)" : "scale(1.08)",
                   }}
                 >
-                  {/* belly scale stripe */}
+                  {/* realistic scale texture */}
                   <span
-                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+                    className="absolute inset-0 rounded-full"
                     style={{
-                      width: "55%",
-                      height: "55%",
-                      background:
-                        "linear-gradient(135deg, hsl(45 90% 65% / 0.45), transparent 70%)",
+                      backgroundImage:
+                        "repeating-linear-gradient(45deg, rgba(0,0,0,0.2) 0 2px, transparent 2px 5px), repeating-linear-gradient(-45deg, rgba(0,0,0,0.16) 0 2px, transparent 2px 5px)",
+                      opacity: 0.65,
+                    }}
+                  />
+                  {/* dark dorsal diamond marking */}
+                  <span
+                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+                    style={{
+                      width: "52%",
+                      height: "52%",
+                      background: "hsl(120 55% 16%)",
+                      clipPath: "polygon(50% 0, 100% 50%, 50% 100%, 0 50%)",
+                      opacity: 0.75,
+                    }}
+                  />
+                  {/* light belly edge */}
+                  <span
+                    className="absolute rounded-full"
+                    style={{
+                      left: "15%", bottom: "6%", width: "70%", height: "18%",
+                      background: "linear-gradient(90deg, transparent, hsl(80 60% 60% / 0.6), transparent)",
                     }}
                   />
                 </div>
