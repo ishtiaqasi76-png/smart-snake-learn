@@ -225,10 +225,11 @@ export const SnakeBoard = ({ subLevel, category, onExit, onFinish }: Props) => {
         <span className="text-destructive">✗ {wrong}</span>
       </div>
 
-      {/* Board */}
+      {/* Board — 3D tilted table */}
+      <div style={{ perspective: "900px" }} className="w-full max-w-md">
       <div
         className={cn(
-          "relative w-full max-w-md aspect-[14/18] rounded-[var(--radius)] overflow-hidden border-4 border-primary/30",
+          "relative w-full aspect-[14/18] rounded-[var(--radius)] overflow-hidden border-4 border-primary/30",
           shake && "animate-shake"
         )}
         style={{
@@ -236,12 +237,16 @@ export const SnakeBoard = ({ subLevel, category, onExit, onFinish }: Props) => {
           backgroundSize: "cover",
           backgroundPosition: "center",
           touchAction: "none",
+          transform: "rotateX(22deg)",
+          transformStyle: "preserve-3d",
+          boxShadow:
+            "0 30px 50px -12px rgba(0,0,0,0.55), 0 12px 24px rgba(0,0,0,0.35), inset 0 0 60px rgba(0,0,0,0.15)",
         }}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
-        {/* subtle overlay for contrast */}
-        <div className="absolute inset-0 bg-background/10 pointer-events-none" />
+        {/* depth vignette + light from top */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.28) 100%)" }} />
         {/* items */}
         {items.map((it) => (
           <div
