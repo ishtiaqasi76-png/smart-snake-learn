@@ -302,8 +302,21 @@ export const SnakeBoard = ({ subLevel, category, onExit, onFinish }: Props) => {
                 width: `${cellPx}%`,
                 height: `${cellPxY}%`,
                 zIndex: isHead ? 30 : 20 - Math.min(i, 18),
+                transform: `translateZ(${isHead ? 34 : 22}px)`,
+                transformStyle: "preserve-3d",
               }}
             >
+              {/* soft ground shadow for 3D depth */}
+              <span
+                className="absolute rounded-full bg-black/45 blur-[4px] pointer-events-none"
+                style={{
+                  width: "85%",
+                  height: "30%",
+                  left: "8%",
+                  bottom: "-10%",
+                  transform: `translateZ(${isHead ? -32 : -20}px)`,
+                }}
+              />
               {isHead ? (
                 <div
                   className="w-full h-full relative"
