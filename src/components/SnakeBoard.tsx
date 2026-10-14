@@ -4,6 +4,8 @@ import { sounds } from "@/game/sounds";
 import { speech } from "@/game/speech";
 import { cn } from "@/lib/utils";
 import gardenBg from "@/assets/garden-board.jpg";
+import { SnakeScene } from "./SnakeScene";
+import { Button } from "@/components/ui/button";
 
 type Dir = "up" | "down" | "left" | "right";
 type Cell = { x: number; y: number };
@@ -100,7 +102,7 @@ export const SnakeBoard = ({ subLevel, category, onExit, onFinish }: Props) => {
       };
       const d = map[e.key];
       if (d) { e.preventDefault(); setDirection(d); }
-      if (e.key === " ") setPaused((p) => !p);
+      if (e.key === " ") { e.preventDefault(); setPaused((p) => !p); }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -199,9 +201,6 @@ export const SnakeBoard = ({ subLevel, category, onExit, onFinish }: Props) => {
     return () => clearInterval(id);
   }, [paused, items, target, targetIdx, totalNeeded, correct, wrong, subLevel.speedMs, spawnItems, onFinish]);
 
-  const cellPx = 100 / COLS; // % width per cell
-  const cellPxY = 100 / ROWS;
-
   const fontClass = subLevel.fontClass ?? "";
 
   const progress = useMemo(() => `${targetIdx} / ${totalNeeded}`, [targetIdx, totalNeeded]);
@@ -210,14 +209,14 @@ export const SnakeBoard = ({ subLevel, category, onExit, onFinish }: Props) => {
     <div className="w-full h-full flex flex-col items-center gap-3 p-3">
       {/* Top HUD */}
       <div className="w-full max-w-md flex items-center justify-between gap-2">
-        <button onClick={onExit} className="kid-btn bg-card px-3 py-2 text-sm">← Exit</button>
+        <Button variant="ghost" onClick={onExit} className="kid-btn bg-card px-3 py-2 text-sm">← Exit</Button>
         <div className="kid-card px-4 py-2 flex items-center gap-2">
           <span className="text-xs text-muted-foreground">Find</span>
           <span className={cn("text-2xl font-extrabold text-primary", fontClass)}>{target}</span>
         </div>
-        <button onClick={() => setPaused((p) => !p)} className="kid-btn bg-card px-3 py-2 text-sm">
+        <Button variant="ghost" aria-label={paused ? "Resume game" : "Pause game"} onClick={() => setPaused((p) => !p)} className="kid-btn bg-card px-3 py-2 text-sm">
           {paused ? "▶" : "⏸"}
-        </button>
+        </Button>
       </div>
       <div className="w-full max-w-md flex items-center justify-between text-sm font-bold">
         <span className="text-success">✓ {correct}</span>
@@ -225,249 +224,35 @@ export const SnakeBoard = ({ subLevel, category, onExit, onFinish }: Props) => {
         <span className="text-destructive">✗ {wrong}</span>
       </div>
 
-      {/* Board — 3D tilted table */}
-      <div style={{ perspective: "900px" }} className="w-full max-w-md">
+      {/* Real WebGL board; input and pause remain accessible DOM controls. */}
       <div
-        className={cn(
-          "relative w-full aspect-[14/18] rounded-[var(--radius)] overflow-hidden border-4 border-primary/30",
-          shake && "animate-shake"
-        )}
-        style={{
-          backgroundImage: `url(${gardenBg})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          touchAction: "none",
-          transform: "rotateX(22deg)",
-          transformStyle: "preserve-3d",
-          boxShadow:
-            "0 30px 50px -12px rgba(0,0,0,0.55), 0 12px 24px rgba(0,0,0,0.35), inset 0 0 60px rgba(0,0,0,0.15)",
-        }}
+        className={cn("relative w-full max-w-md aspect-[14/18] overflow-hidden touch-none", shake && "animate-shake")}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
+        aria-label="3D snake garden"
       >
-        {/* depth vignette + light from top */}
-        <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.28) 100%)" }} />
-        {/* items */}
-        {items.map((it) => (
-          <div
-            key={it.id}
-            className="absolute flex items-center justify-center animate-scale-in"
-            style={{
-              left: `${it.x * cellPx}%`,
-              top: `${it.y * cellPxY}%`,
-              width: `${cellPx}%`,
-              height: `${cellPxY}%`,
-              transform: "translateZ(28px)",
-              transformStyle: "preserve-3d",
-            }}
-          >
-            {/* ground shadow */}
-            <span
-              className="absolute rounded-full bg-black/40 blur-[3px]"
-              style={{ width: "80%", height: "26%", bottom: "-8%", left: "10%", transform: "translateZ(-26px)" }}
-            />
-            {/* 3D ball */}
-            <span
-              className={cn("flex items-center justify-center font-extrabold rounded-full", it.value === target && "animate-pop")}
-              style={{
-                width: "92%",
-                height: "92%",
-                fontSize: "clamp(10px, 2.4vw, 18px)",
-                color: "hsl(30 100% 12%)",
-                background:
-                  "radial-gradient(circle at 32% 28%, hsl(48 100% 80%) 0%, hsl(45 98% 55%) 45%, hsl(35 95% 40%) 100%)",
-                boxShadow:
-                  "inset -3px -5px 8px rgba(0,0,0,0.35), inset 3px 4px 6px rgba(255,255,255,0.55), 0 6px 10px rgba(0,0,0,0.35), 0 0 14px hsl(45 100% 60% / 0.5)",
-              }}
-            >
-              <span className={fontClass} style={{ textShadow: "0 1px 0 rgba(255,255,255,0.5)" }}>{it.value}</span>
-            </span>
-          </div>
-        ))}
-
-        {/* snake */}
-        {snake.map((s, i) => {
-          const isHead = i === 0;
-          const isTail = i === snake.length - 1;
-          const rot = dir === "up" ? -90 : dir === "down" ? 90 : dir === "left" ? 180 : 0;
-          return (
-            <div
-              key={i}
-              className="absolute transition-[left,top] duration-100"
-              style={{
-                left: `${s.x * cellPx}%`,
-                top: `${s.y * cellPxY}%`,
-                width: `${cellPx}%`,
-                height: `${cellPxY}%`,
-                zIndex: isHead ? 30 : 20 - Math.min(i, 18),
-                transform: `translateZ(${isHead ? 34 : 22}px)`,
-                transformStyle: "preserve-3d",
-              }}
-            >
-              {/* soft ground shadow for 3D depth */}
-              <span
-                className="absolute rounded-full bg-black/45 blur-[4px] pointer-events-none"
-                style={{
-                  width: "85%",
-                  height: "30%",
-                  left: "8%",
-                  bottom: "-10%",
-                  transform: `translateZ(${isHead ? -32 : -20}px)`,
-                }}
-              />
-              {isHead ? (
-                <div
-                  className="w-full h-full relative"
-                  style={{ transform: `rotate(${rot}deg) scale(1.45)`, transformOrigin: "center" }}
-                >
-                  {/* viper head — triangular, keeled scales */}
-                  <div
-                    className="absolute"
-                    style={{
-                      left: "12%",
-                      top: "8%",
-                      width: "88%",
-                      height: "84%",
-                      background:
-                        "radial-gradient(circle at 68% 32%, hsl(95 70% 48%) 0%, hsl(110 60% 34%) 55%, hsl(120 55% 22%) 100%)",
-                      clipPath: "polygon(0 50%, 25% 8%, 60% 0, 100% 22%, 100% 78%, 60% 100%, 25% 92%)",
-                      boxShadow: "inset -3px -4px 7px rgba(0,0,0,0.4), inset 2px 3px 5px rgba(255,255,255,0.25)",
-                    }}
-                  />
-                  {/* scale texture overlay */}
-                  <div
-                    className="absolute"
-                    style={{
-                      left: "12%",
-                      top: "8%",
-                      width: "88%",
-                      height: "84%",
-                      clipPath: "polygon(0 50%, 25% 8%, 60% 0, 100% 22%, 100% 78%, 60% 100%, 25% 92%)",
-                      backgroundImage:
-                        "repeating-linear-gradient(45deg, rgba(0,0,0,0.22) 0 2px, transparent 2px 5px), repeating-linear-gradient(-45deg, rgba(0,0,0,0.18) 0 2px, transparent 2px 5px)",
-                      opacity: 0.7,
-                    }}
-                  />
-                  {/* dark dorsal stripe */}
-                  <span
-                    className="absolute"
-                    style={{
-                      left: "10%",
-                      top: "42%",
-                      width: "70%",
-                      height: "16%",
-                      background: "linear-gradient(90deg, hsl(120 60% 15%), hsl(110 55% 22%))",
-                      borderRadius: "50%",
-                      opacity: 0.8,
-                    }}
-                  />
-                  {/* yellow viper eyes with vertical pupils */}
-                  <span
-                    className="absolute flex items-center justify-center rounded-full"
-                    style={{
-                      top: "24%", right: "16%", width: "20%", height: "20%",
-                      background: "radial-gradient(circle at 40% 35%, hsl(55 100% 65%), hsl(45 95% 45%))",
-                      boxShadow: "0 0 4px rgba(0,0,0,0.6), inset 0 0 2px rgba(0,0,0,0.5)",
-                    }}
-                  >
-                    <span style={{ width: "22%", height: "75%", background: "#000", borderRadius: "50%" }} />
-                  </span>
-                  <span
-                    className="absolute flex items-center justify-center rounded-full"
-                    style={{
-                      bottom: "24%", right: "16%", width: "20%", height: "20%",
-                      background: "radial-gradient(circle at 40% 35%, hsl(55 100% 65%), hsl(45 95% 45%))",
-                      boxShadow: "0 0 4px rgba(0,0,0,0.6), inset 0 0 2px rgba(0,0,0,0.5)",
-                    }}
-                  >
-                    <span style={{ width: "22%", height: "75%", background: "#000", borderRadius: "50%" }} />
-                  </span>
-                  {/* nostril */}
-                  <span className="absolute rounded-full bg-black/70" style={{ top: "46%", right: "2%", width: "7%", height: "7%" }} />
-                  {/* forked tongue */}
-                  <span
-                    className="absolute top-1/2 -right-[32%] w-[36%] h-[10%] -translate-y-1/2 animate-pulse"
-                    style={{
-                      background: "hsl(0 85% 50%)",
-                      clipPath: "polygon(0 35%, 60% 35%, 60% 0, 100% 50%, 60% 100%, 60% 65%, 0 65%)",
-                    }}
-                  />
-                </div>
-              ) : (
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background: `radial-gradient(circle at 32% 28%, hsl(100 75% 52%) 0%, hsl(115 60% 36%) 50%, hsl(125 55% 22%) 100%)`,
-                    borderRadius: "50%",
-                    boxShadow:
-                      "inset -3px -5px 7px rgba(0,0,0,0.45), inset 3px 4px 5px rgba(255,255,255,0.3), 0 5px 8px rgba(0,0,0,0.35)",
-                    transform: isTail ? "scale(0.7)" : "scale(1.08)",
-                  }}
-                >
-                  {/* realistic scale texture */}
-                  <span
-                    className="absolute inset-0 rounded-full"
-                    style={{
-                      backgroundImage:
-                        "repeating-linear-gradient(45deg, rgba(0,0,0,0.2) 0 2px, transparent 2px 5px), repeating-linear-gradient(-45deg, rgba(0,0,0,0.16) 0 2px, transparent 2px 5px)",
-                      opacity: 0.65,
-                    }}
-                  />
-                  {/* dark dorsal diamond marking */}
-                  <span
-                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-                    style={{
-                      width: "52%",
-                      height: "52%",
-                      background: "hsl(120 55% 16%)",
-                      clipPath: "polygon(50% 0, 100% 50%, 50% 100%, 0 50%)",
-                      opacity: 0.75,
-                    }}
-                  />
-                  {/* light belly edge */}
-                  <span
-                    className="absolute rounded-full"
-                    style={{
-                      left: "15%", bottom: "6%", width: "70%", height: "18%",
-                      background: "linear-gradient(90deg, transparent, hsl(80 60% 60% / 0.6), transparent)",
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-          );
-        })}
-
-        {popCell && (
-          <div
-            className="absolute pointer-events-none animate-star-burst text-2xl"
-            style={{ left: `${popCell.x * cellPx}%`, top: `${popCell.y * cellPxY}%`, width: `${cellPx}%`, height: `${cellPxY}%`, display: "flex", alignItems: "center", justifyContent: "center" }}
-          >
-            ⭐
-          </div>
-        )}
-
+        <SnakeScene snake={snake} items={items} dir={dir} cols={COLS} rows={ROWS} bgUrl={gardenBg} paused={paused} />
+        {popCell && <div className="absolute top-3 left-1/2 -translate-x-1/2 pointer-events-none animate-star-burst text-3xl">⭐</div>}
         {paused && (
           <div className="absolute inset-0 bg-background/70 backdrop-blur-sm flex items-center justify-center">
             <div className="kid-card p-6 text-center">
               <div className="text-2xl font-bold mb-2">Paused</div>
-              <button onClick={() => setPaused(false)} className="kid-btn gradient-primary text-primary-foreground px-6 py-3">Resume ▶</button>
+              <Button onClick={() => setPaused(false)} className="kid-btn gradient-primary text-primary-foreground px-6 py-3">Resume ▶</Button>
             </div>
           </div>
         )}
-      </div>
       </div>
 
       {/* Direction pad */}
       <div className="w-44 grid grid-cols-3 gap-2 mt-1 select-none">
         <div />
-        <button onClick={() => setDirection("up")} className="kid-btn bg-card aspect-square text-2xl">▲</button>
+        <Button variant="ghost" aria-label="Move up" onClick={() => setDirection("up")} className="kid-btn bg-card aspect-square text-2xl">▲</Button>
         <div />
-        <button onClick={() => setDirection("left")} className="kid-btn bg-card aspect-square text-2xl">◀</button>
-        <button onClick={() => setPaused((p) => !p)} className="kid-btn bg-secondary text-secondary-foreground aspect-square text-xl">{paused ? "▶" : "⏸"}</button>
-        <button onClick={() => setDirection("right")} className="kid-btn bg-card aspect-square text-2xl">▶</button>
+        <Button variant="ghost" aria-label="Move left" onClick={() => setDirection("left")} className="kid-btn bg-card aspect-square text-2xl">◀</Button>
+        <Button variant="ghost" aria-label={paused ? "Resume game" : "Pause game"} onClick={() => setPaused((p) => !p)} className="kid-btn bg-secondary text-secondary-foreground aspect-square text-xl">{paused ? "▶" : "⏸"}</Button>
+        <Button variant="ghost" aria-label="Move right" onClick={() => setDirection("right")} className="kid-btn bg-card aspect-square text-2xl">▶</Button>
         <div />
-        <button onClick={() => setDirection("down")} className="kid-btn bg-card aspect-square text-2xl">▼</button>
+        <Button variant="ghost" aria-label="Move down" onClick={() => setDirection("down")} className="kid-btn bg-card aspect-square text-2xl">▼</Button>
         <div />
       </div>
     </div>
