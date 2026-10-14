@@ -1,207 +1,146 @@
-import { useMemo, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
+import { Environment, Lightformer, useTexture } from "@react-three/drei";
 import * as THREE from "three";
 
 type Dir = "up" | "down" | "left" | "right";
 type Cell = { x: number; y: number };
 type Item = Cell & { value: string; id: number };
+interface SceneProps { snake: Cell[]; items: Item[]; dir: Dir; cols: number; rows: number; bgUrl: string; paused: boolean }
 
-interface SceneProps {
-  snake: Cell[];
-  items: Item[];
-  dir: Dir;
-  cols: number;
-  rows: number;
-  bgUrl: string;
+// Scene colors come from the same semantic palette as the DOM.
+function usePalette() {
+  return useMemo(() => {
+    const css = getComputedStyle(document.documentElement);
+    const color = (token: string) => {
+      const parts = css.getPropertyValue(token).trim().split(/\s+/).map(parseFloat);
+      return new THREE.Color().setHSL(parts[0] / 360, parts[1] / 100, parts[2] / 100).getStyle();
+    };
+    return { skin: color("--snake-body"), head: color("--snake-head"), gold: color("--warning"), ink: color("--foreground"), sky: color("--board"), tongue: color("--food"), light: color("--card"), edge: color("--border") };
+  }, []);
+}
+type Palette = ReturnType<typeof usePalette>;
+const world = (c: Cell, cols: number, rows: number) => new THREE.Vector3(c.x - cols / 2 + .5, .43, c.y - rows / 2 + .5);
+
+function scaleTexture(p: Palette) {
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 256;
+  const ctx = canvas.getContext("2d");
+  if (ctx) {
+    ctx.fillStyle = p.skin; ctx.fillRect(0, 0, 256, 256);
+    for (let y = -16; y < 280; y += 24) for (let x = -24; x < 280; x += 32) {
+      const offset = (Math.floor(y / 24) % 2) * 16;
+      ctx.fillStyle = p.head; ctx.globalAlpha = .6;
+      ctx.beginPath(); ctx.ellipse(x + offset, y, 15, 12, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = p.light; ctx.globalAlpha = .22; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(x + offset - 1, y - 2, 12, 8, 0, Math.PI, Math.PI * 2); ctx.stroke();
+    }
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(2, 1);
+  return texture;
 }
 
-const toWorld = (c: Cell, cols: number, rows: number): [number, number, number] => [
-  c.x - cols / 2 + 0.5,
-  0,
-  c.y - rows / 2 + 0.5,
-];
-
-// Smooth-follow segment
-const Segment = ({
-  target,
-  radius,
-  color,
-  emissive,
-}: {
-  target: [number, number, number];
-  radius: number;
-  color: string;
-  emissive?: string;
-}) => {
-  const ref = useRef<THREE.Mesh>(null);
+function Snake({ snake, dir, cols, rows, paused, p }: Omit<SceneProps, "items" | "bgUrl"> & { p: Palette }) {
+  const head = useRef<THREE.Group>(null);
+  const links = useRef<(THREE.Mesh | null)[]>([]);
+  const texture = useMemo(() => scaleTexture(p), [p]);
+  useEffect(() => () => texture.dispose(), [texture]);
+  const targets = useMemo(() => snake.map(c => world(c, cols, rows)), [snake, cols, rows]);
+  const points = useRef(targets.map(v => v.clone()));
+  const temp = useMemo(() => new THREE.Vector3(), []);
+  const up = useMemo(() => new THREE.Vector3(0, 1, 0), []);
+  const yaw = dir === "right" ? 0 : dir === "down" ? -Math.PI / 2 : dir === "left" ? Math.PI : Math.PI / 2;
   useFrame((_, delta) => {
-    if (!ref.current) return;
-    const k = 1 - Math.exp(-14 * Math.min(delta, 0.05));
-    ref.current.position.lerp(new THREE.Vector3(...target), k);
+    const k = paused ? 1 : 1 - Math.exp(-22 * Math.min(delta, .05));
+    targets.forEach((v, i) => {
+      if (!points.current[i]) points.current[i] = v.clone();
+      if (points.current[i].distanceTo(v) > 3) points.current[i].copy(v);
+      else points.current[i].lerp(v, k);
+    });
+    if (head.current && points.current[0]) {
+      head.current.position.copy(points.current[0]);
+      const diff = Math.atan2(Math.sin(yaw - head.current.rotation.y), Math.cos(yaw - head.current.rotation.y));
+      head.current.rotation.y += diff * k;
+    }
+    links.current.forEach((mesh, i) => {
+      const a = points.current[i], b = points.current[i + 1];
+      if (!mesh || !a || !b) return;
+      // Never draw a body across the garden when wrapping through an edge.
+      mesh.visible = targets[i].distanceTo(targets[i + 1]) < 2;
+      mesh.position.copy(a).add(b).multiplyScalar(.5);
+      temp.copy(a).sub(b);
+      const length = temp.length();
+      const radius = .40 * (1 - .70 * Math.pow((i + 1) / snake.length, 4));
+      mesh.scale.set(radius, length + radius * 1.4, radius);
+      if (length > .001) mesh.quaternion.setFromUnitVectors(up, temp.normalize());
+    });
   });
-  return (
-    <mesh ref={ref} position={target} castShadow>
-      <sphereGeometry args={[radius, 24, 24]} />
-      <meshStandardMaterial color={color} roughness={0.35} metalness={0.15} emissive={emissive ?? "#000000"} emissiveIntensity={0.15} />
-    </mesh>
-  );
-};
-
-const Head = ({ target, dir }: { target: [number, number, number]; dir: Dir }) => {
-  const ref = useRef<THREE.Group>(null);
-  const rotY = dir === "right" ? 0 : dir === "down" ? Math.PI / 2 : dir === "left" ? Math.PI : -Math.PI / 2;
-  useFrame((_, delta) => {
-    if (!ref.current) return;
-    const k = 1 - Math.exp(-14 * Math.min(delta, 0.05));
-    ref.current.position.lerp(new THREE.Vector3(target[0], target[1], target[2]), k);
-  });
-  return (
-    <group ref={ref} position={target} rotation-y={rotY}>
-      {/* head */}
-      <mesh castShadow position={[0, 0.1, 0]} scale={[1.25, 0.85, 0.95]}>
-        <sphereGeometry args={[0.55, 24, 24]} />
-        <meshStandardMaterial color="#3e9e2f" roughness={0.3} metalness={0.2} />
+  return <>
+    {snake.slice(1).map((_, i) => <mesh key={i} ref={mesh => { links.current[i] = mesh; }} castShadow>
+      <capsuleGeometry args={[1, 0.01, 6, 12]} />
+      <meshStandardMaterial map={texture} roughness={.48} />
+    </mesh>)}
+    <group ref={head} position={targets[0]} rotation-y={yaw}>
+      <mesh castShadow scale={[.72, .34, .5]} position={[.12, .04, 0]}>
+        <sphereGeometry args={[1, 24, 16]} /><meshStandardMaterial map={texture} color={p.skin} roughness={.38} />
       </mesh>
-      {/* snout */}
-      <mesh castShadow position={[0.45, 0.02, 0]} scale={[1, 0.7, 0.8]}>
-        <sphereGeometry args={[0.3, 16, 16]} />
-        <meshStandardMaterial color="#358a28" roughness={0.35} />
+      <mesh castShadow position={[.57, -.04, 0]} scale={[.30, .18, .32]}>
+        <sphereGeometry args={[1, 16, 12]} /><meshStandardMaterial color={p.head} roughness={.5} />
       </mesh>
-      {/* eyes — yellow viper eyes */}
-      <mesh position={[0.28, 0.32, 0.28]}>
-        <sphereGeometry args={[0.13, 16, 16]} />
-        <meshStandardMaterial color="#ffd93b" emissive="#ffcc00" emissiveIntensity={0.6} roughness={0.2} />
-      </mesh>
-      <mesh position={[0.28, 0.32, -0.28]}>
-        <sphereGeometry args={[0.13, 16, 16]} />
-        <meshStandardMaterial color="#ffd93b" emissive="#ffcc00" emissiveIntensity={0.6} roughness={0.2} />
-      </mesh>
-      {/* pupils */}
-      <mesh position={[0.38, 0.32, 0.28]}>
-        <sphereGeometry args={[0.055, 8, 8]} />
-        <meshStandardMaterial color="#000000" />
-      </mesh>
-      <mesh position={[0.38, 0.32, -0.28]}>
-        <sphereGeometry args={[0.055, 8, 8]} />
-        <meshStandardMaterial color="#000000" />
-      </mesh>
-      {/* forked tongue */}
-      <mesh position={[0.85, -0.05, 0]}>
-        <boxGeometry args={[0.35, 0.03, 0.06]} />
-        <meshStandardMaterial color="#e02020" emissive="#aa0000" emissiveIntensity={0.4} />
-      </mesh>
-      <mesh position={[1.05, -0.05, 0.07]} rotation-y={0.5}>
-        <boxGeometry args={[0.15, 0.03, 0.05]} />
-        <meshStandardMaterial color="#e02020" emissive="#aa0000" emissiveIntensity={0.4} />
-      </mesh>
-      <mesh position={[1.05, -0.05, -0.07]} rotation-y={-0.5}>
-        <boxGeometry args={[0.15, 0.03, 0.05]} />
-        <meshStandardMaterial color="#e02020" emissive="#aa0000" emissiveIntensity={0.4} />
-      </mesh>
+      {[-1, 1].map(side => <group key={side} position={[.36, .22, side * .34]}>
+        <mesh><sphereGeometry args={[.13, 16, 12]} /><meshStandardMaterial color={p.gold} roughness={.22} /></mesh>
+        <mesh position={[.045, .075, side * .065]} scale={[.035, .08, .045]}><sphereGeometry args={[1, 12, 8]} /><meshStandardMaterial color={p.ink} /></mesh>
+      </group>)}
+      <mesh position={[.90, -.04, 0]}><boxGeometry args={[.32, .025, .04]} /><meshStandardMaterial color={p.tongue} /></mesh>
+      {[-1, 1].map(side => <mesh key={side} position={[1.10, -.04, side * .05]} rotation-y={side * -.55}><boxGeometry args={[.17, .025, .025]} /><meshStandardMaterial color={p.tongue} /></mesh>)}
     </group>
-  );
-};
+  </>;
+}
 
-// Item: floating golden ball with the value drawn on a sprite
-const ItemBall = ({ item, cols, rows }: { item: Item; cols: number; rows: number }) => {
-  const [x, , z] = toWorld(item, cols, rows);
-  const groupRef = useRef<THREE.Group>(null);
-
+function ItemBall({ item, cols, rows, paused, p }: { item: Item; cols: number; rows: number; paused: boolean; p: Palette }) {
+  const group = useRef<THREE.Group>(null);
+  const time = useRef(0);
   const texture = useMemo(() => {
-    const canvas = document.createElement("canvas");
-    canvas.width = 256;
-    canvas.height = 256;
-    const ctx = canvas.getContext("2d")!;
-    ctx.clearRect(0, 0, 256, 256);
-    ctx.fillStyle = "#3a2500";
-    ctx.font = "bold 150px Arial, sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(item.value, 128, 138);
-    const tex = new THREE.CanvasTexture(canvas);
-    tex.needsUpdate = true;
-    return tex;
-  }, [item.value]);
+    const canvas = document.createElement("canvas"); canvas.width = canvas.height = 256;
+    const ctx = canvas.getContext("2d");
+    if (ctx) { ctx.fillStyle = p.ink; ctx.font = "bold 140px Arial, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(item.value, 128, 138); }
+    const t = new THREE.CanvasTexture(canvas); t.colorSpace = THREE.SRGBColorSpace; return t;
+  }, [item.value, p]);
+  useEffect(() => () => texture.dispose(), [texture]);
+  const position = world(item, cols, rows);
+  useFrame((_, delta) => { if (paused || !group.current) return; time.current += Math.min(delta, .05); group.current.position.y = .75 + Math.sin(time.current * 2.5) * .08; });
+  return <group ref={group} position={[position.x, .75, position.z]}>
+    <mesh castShadow><sphereGeometry args={[.49, 20, 16]} /><meshStandardMaterial color={p.gold} roughness={.3} metalness={.25} /></mesh>
+    <sprite scale={[.85, .85, 1]} position={[0, .08, .03]}><spriteMaterial map={texture} transparent depthTest={false} /></sprite>
+  </group>;
+}
 
-  useFrame(({ clock }) => {
-    if (!groupRef.current) return;
-    const t = clock.getElapsedTime();
-    groupRef.current.position.y = 0.75 + Math.sin(t * 2.5) * 0.12;
-    groupRef.current.rotation.y = t * 0.8;
-  });
+function Ground({ cols, rows, bgUrl, p }: { cols: number; rows: number; bgUrl: string; p: Palette }) {
+  const texture = useTexture(bgUrl);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return <group>
+    <mesh position={[0, -.27, 0]} receiveShadow><boxGeometry args={[cols + .4, .5, rows + .4]} /><meshStandardMaterial color={p.head} roughness={1} /></mesh>
+    <mesh rotation-x={-Math.PI / 2} receiveShadow><planeGeometry args={[cols, rows, 1, 1]} /><meshStandardMaterial map={texture} roughness={.92} /></mesh>
+    {[-1, 1].map(side => <mesh key={side} position={[side * (cols / 2 + .07), .05, 0]} receiveShadow><boxGeometry args={[.14, .14, rows + .2]} /><meshStandardMaterial color={p.edge} roughness={.7} /></mesh>)}
+    {[-1, 1].map(side => <mesh key={side} position={[0, .05, side * (rows / 2 + .07)]} receiveShadow><boxGeometry args={[cols + .2, .14, .14]} /><meshStandardMaterial color={p.edge} roughness={.7} /></mesh>)}
+  </group>;
+}
 
-  return (
-    <group ref={groupRef} position={[x, 0.75, z]}>
-      <mesh castShadow>
-        <sphereGeometry args={[0.42, 24, 24]} />
-        <meshStandardMaterial color="#ffc531" emissive="#ffaa00" emissiveIntensity={0.45} roughness={0.25} metalness={0.5} />
-      </mesh>
-      <sprite scale={[1.1, 1.1, 1]}>
-        <spriteMaterial map={texture} transparent depthTest={false} />
-      </sprite>
-      <pointLight color="#ffcc44" intensity={2.5} distance={4} />
-    </group>
-  );
-};
-
-const GardenGround = ({ cols, rows, bgUrl }: { cols: number; rows: number; bgUrl: string }) => {
-  const texture = useMemo(() => {
-    const tex = new THREE.TextureLoader().load(bgUrl);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    return tex;
-  }, [bgUrl]);
-  return (
-    <mesh rotation-x={-Math.PI / 2} receiveShadow>
-      <planeGeometry args={[cols + 2, rows + 2]} />
-      <meshStandardMaterial map={texture} roughness={0.9} />
-    </mesh>
-  );
-};
-
-export const SnakeScene = ({ snake, items, dir, cols, rows, bgUrl }: SceneProps) => {
-  return (
-    <Canvas
-      shadows
-      camera={{ position: [0, 16, 11], fov: 42 }}
-      onCreated={({ camera }) => camera.lookAt(0, 0, 1.5)}
-      style={{ width: "100%", height: "100%" }}
-    >
-      <color attach="background" args={["#bfe8ff"]} />
-      <fog attach="fog" args={["#bfe8ff", 30, 60]} />
-      <ambientLight intensity={0.75} />
-      <directionalLight
-        position={[8, 14, 6]}
-        intensity={1.6}
-        castShadow
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
-        shadow-camera-left={-12}
-        shadow-camera-right={12}
-        shadow-camera-top={14}
-        shadow-camera-bottom={-14}
-      />
-      <GardenGround cols={cols} rows={rows} bgUrl={bgUrl} />
-
-      {/* snake body (skip head) */}
-      {snake.slice(1).map((s, i) => {
-        const [x, , z] = toWorld(s, cols, rows);
-        const isTail = i === snake.length - 2;
-        return (
-          <Segment
-            key={i}
-            target={[x, 0.42, z]}
-            radius={isTail ? 0.3 : 0.45}
-            color={i % 2 === 0 ? "#46b336" : "#3a9c2c"}
-          />
-        );
-      })}
-      {/* snake head */}
-      {snake.length > 0 && <Head target={[...toWorld(snake[0], cols, rows).slice(0, 1), 0.5, toWorld(snake[0], cols, rows)[2]] as [number, number, number]} dir={dir} />}
-
-      {/* items */}
-      {items.map((it) => (
-        <ItemBall key={it.id} item={it} cols={cols} rows={rows} />
-      ))}
-    </Canvas>
-  );
+export const SnakeScene = ({ snake, items, dir, cols, rows, bgUrl, paused }: SceneProps) => {
+  const p = usePalette();
+  return <Canvas shadows dpr={[1, 1.5]} orthographic camera={{ position: [0, 22, 15], zoom: 24, near: .1, far: 80 }} onCreated={({ camera }) => { camera.lookAt(0, 0, 0); camera.updateProjectionMatrix(); }}>
+    <color attach="background" args={[p.sky]} />
+    <hemisphereLight args={[p.light, p.head, 1.2]} />
+    <directionalLight position={[-5, 14, 6]} intensity={2} castShadow shadow-mapSize={[1024, 1024]} shadow-camera-left={-10} shadow-camera-right={10} shadow-camera-top={12} shadow-camera-bottom={-12} shadow-normalBias={.04} />
+    <Environment resolution={64}>
+      <Lightformer intensity={1.5} color={p.light} position={[0, 10, 0]} rotation-x={Math.PI / 2} scale={[20, 20, 1]} />
+      <Lightformer intensity={.5} color={p.sky} position={[-10, 4, 0]} rotation-y={Math.PI / 2} scale={[10, 10, 1]} />
+    </Environment>
+    <Suspense fallback={null}><Ground cols={cols} rows={rows} bgUrl={bgUrl} p={p} /></Suspense>
+    <Snake snake={snake} dir={dir} cols={cols} rows={rows} paused={paused} p={p} />
+    {items.map(item => <ItemBall key={item.id} item={item} cols={cols} rows={rows} paused={paused} p={p} />)}
+  </Canvas>;
 };
