@@ -135,9 +135,6 @@ function Snake({ snake, dir, cols, rows, paused, p }: Omit<SceneProps, "items" |
     </mesh>)}
     <group ref={head} position={targets[0]} rotation-y={yaw}>
       <Suspense fallback={null}><Cobra p={p} /></Suspense>
-    </group>)}
-      <mesh position={[.90, -.04, 0]}><boxGeometry args={[.32, .025, .04]} /><meshStandardMaterial color={p.tongue} /></mesh>
-      {[-1, 1].map(side => <mesh key={side} position={[1.10, -.04, side * .05]} rotation-y={side * -.55}><boxGeometry args={[.17, .025, .025]} /><meshStandardMaterial color={p.tongue} /></mesh>)}
     </group>
   </>;
 }
