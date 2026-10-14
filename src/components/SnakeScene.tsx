@@ -1,7 +1,9 @@
 import { Suspense, useEffect, useMemo, useRef } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
-import { Environment, Lightformer, useTexture } from "@react-three/drei";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Environment, Lightformer, useTexture, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
+import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
+import snakeAsset from "@/assets/snake.asset.json";
 
 type Dir = "up" | "down" | "left" | "right";
 type Cell = { x: number; y: number };
@@ -41,6 +43,54 @@ function scaleTexture(p: Palette) {
   texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
   texture.repeat.set(2, 1);
   return texture;
+}
+
+function Cobra({ p }: { p: Palette }) {
+  const { scene } = useGLTF(snakeAsset.url);
+  const object = useMemo(() => {
+    const copy = clone(scene);
+    const bounds = new THREE.Box3().setFromObject(copy);
+    const size = bounds.getSize(new THREE.Vector3());
+    copy.scale.setScalar(1.65 / size.y);
+    copy.rotation.y = Math.PI / 2;
+    copy.position.y = -.40;
+    copy.traverse(o => {
+      if (!(o instanceof THREE.Mesh)) return;
+      o.castShadow = true;
+      const materials = Array.isArray(o.material) ? o.material : [o.material];
+      o.material = materials.map(m => {
+        const mat = m.clone();
+        if (mat instanceof THREE.MeshStandardMaterial) {
+          if (m.name === "DarkGreen") mat.color.set(p.head);
+          if (m.name === "LightGreen") mat.color.set(p.skin);
+          if (m.name === "Purple") mat.color.set(p.ink);
+          if (m.name === "Yellow") mat.color.set(p.gold);
+          mat.roughness = .55;
+        }
+        return mat;
+      });
+    });
+    return copy;
+  }, [scene, p]);
+  useEffect(() => () => object.traverse(o => {
+    if (o instanceof THREE.Mesh) {
+      const materials = Array.isArray(o.material) ? o.material : [o.material];
+      materials.forEach(m => m.dispose());
+    }
+  }), [object]);
+  return <primitive object={object} />;
+}
+
+function FitGarden({ cols }: { cols: number }) {
+  const { camera, size } = useThree();
+  useEffect(() => {
+    if (camera instanceof THREE.OrthographicCamera) {
+      camera.zoom = size.width / (cols + 1.3);
+      camera.lookAt(0, 0, 0);
+      camera.updateProjectionMatrix();
+    }
+  }, [camera, size.width, size.height, cols]);
+  return null;
 }
 
 function Snake({ snake, dir, cols, rows, paused, p }: Omit<SceneProps, "items" | "bgUrl"> & { p: Palette }) {
@@ -84,16 +134,8 @@ function Snake({ snake, dir, cols, rows, paused, p }: Omit<SceneProps, "items" |
       <meshStandardMaterial map={texture} roughness={.48} />
     </mesh>)}
     <group ref={head} position={targets[0]} rotation-y={yaw}>
-      <mesh castShadow scale={[.72, .34, .5]} position={[.12, .04, 0]}>
-        <sphereGeometry args={[1, 24, 16]} /><meshStandardMaterial map={texture} color={p.skin} roughness={.38} />
-      </mesh>
-      <mesh castShadow position={[.57, -.04, 0]} scale={[.30, .18, .32]}>
-        <sphereGeometry args={[1, 16, 12]} /><meshStandardMaterial color={p.head} roughness={.5} />
-      </mesh>
-      {[-1, 1].map(side => <group key={side} position={[.36, .22, side * .34]}>
-        <mesh><sphereGeometry args={[.13, 16, 12]} /><meshStandardMaterial color={p.gold} roughness={.22} /></mesh>
-        <mesh position={[.045, .075, side * .065]} scale={[.035, .08, .045]}><sphereGeometry args={[1, 12, 8]} /><meshStandardMaterial color={p.ink} /></mesh>
-      </group>)}
+      <Suspense fallback={null}><Cobra p={p} /></Suspense>
+    </group>)}
       <mesh position={[.90, -.04, 0]}><boxGeometry args={[.32, .025, .04]} /><meshStandardMaterial color={p.tongue} /></mesh>
       {[-1, 1].map(side => <mesh key={side} position={[1.10, -.04, side * .05]} rotation-y={side * -.55}><boxGeometry args={[.17, .025, .025]} /><meshStandardMaterial color={p.tongue} /></mesh>)}
     </group>
@@ -132,6 +174,7 @@ function Ground({ cols, rows, bgUrl, p }: { cols: number; rows: number; bgUrl: s
 export const SnakeScene = ({ snake, items, dir, cols, rows, bgUrl, paused }: SceneProps) => {
   const p = usePalette();
   return <Canvas shadows dpr={[1, 1.5]} orthographic camera={{ position: [0, 22, 15], zoom: 24, near: .1, far: 80 }} onCreated={({ camera }) => { camera.lookAt(0, 0, 0); camera.updateProjectionMatrix(); }}>
+    <FitGarden cols={cols} />
     <color attach="background" args={[p.sky]} />
     <hemisphereLight args={[p.light, p.head, 1.2]} />
     <directionalLight position={[-5, 14, 6]} intensity={2} castShadow shadow-mapSize={[1024, 1024]} shadow-camera-left={-10} shadow-camera-right={10} shadow-camera-top={12} shadow-camera-bottom={-12} shadow-normalBias={.04} />
