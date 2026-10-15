@@ -49,6 +49,13 @@ function Cobra({ p }: { p: Palette }) {
   const { scene } = useGLTF(snakeAsset.url);
   const object = useMemo(() => {
     const copy = clone(scene);
+    copy.updateMatrixWorld(true);
+    copy.traverse(o => {
+      if (o instanceof THREE.SkinnedMesh) {
+        o.skeleton.update();
+        o.computeBoundingBox();
+      }
+    });
     const bounds = new THREE.Box3().setFromObject(copy);
     const size = bounds.getSize(new THREE.Vector3());
     const normalized = new THREE.Group();
