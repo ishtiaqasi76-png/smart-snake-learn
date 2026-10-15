@@ -66,6 +66,7 @@ function Cobra({ p }: { p: Palette }) {
     copy.traverse(o => {
       if (!(o instanceof THREE.Mesh)) return;
       o.castShadow = true;
+      o.frustumCulled = false;
       const materials = Array.isArray(o.material) ? o.material : [o.material];
       const updated = materials.map(m => {
         const mat = m.clone();
