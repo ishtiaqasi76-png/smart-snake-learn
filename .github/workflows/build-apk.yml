@@ -105,16 +105,18 @@ jobs:
           const fs = require("fs");
           const p = "android/app/build.gradle";
           let s = fs.readFileSync(p, "utf8");
-          const signingBlock = `
-    signingConfigs {
-        release {
-            storeFile file(System.getenv("KEYSTORE_FILE") ?: "smart-snake.keystore")
-            storePassword System.getenv("KEYSTORE_PASSWORD")
-            keyAlias System.getenv("KEY_ALIAS")
-            keyPassword System.getenv("KEY_PASSWORD")
-        }
-    }
-`;
+          const signingBlock = [
+            "",
+            `    signingConfigs {`,
+            `        release {`,
+            `            storeFile file(System.getenv("KEYSTORE_FILE") ?: "smart-snake.keystore")`,
+            `            storePassword System.getenv("KEYSTORE_PASSWORD")`,
+            `            keyAlias System.getenv("KEY_ALIAS")`,
+            `            keyPassword System.getenv("KEY_PASSWORD")`,
+            `        }`,
+            `    }`,
+            ``
+          ].join("\n");
           s = s.replace(/android\s*\{/, "android {" + signingBlock);
           s = s.replace(/(buildTypes\s*\{[\s\S]*?release\s*\{)/, "$1\n            signingConfig signingConfigs.release");
           fs.writeFileSync(p, s);
