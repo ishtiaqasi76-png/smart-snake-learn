@@ -51,9 +51,11 @@ function Cobra({ p }: { p: Palette }) {
     const copy = clone(scene);
     const bounds = new THREE.Box3().setFromObject(copy);
     const size = bounds.getSize(new THREE.Vector3());
-    copy.scale.setScalar(1.65 / size.y);
-    copy.rotation.y = Math.PI / 2;
-    copy.position.y = -.40;
+    const normalized = new THREE.Group();
+    normalized.add(copy);
+    normalized.scale.setScalar(1.65 / size.y);
+    normalized.rotation.y = Math.PI / 2;
+    normalized.position.y = -.40;
     copy.traverse(o => {
       if (!(o instanceof THREE.Mesh)) return;
       o.castShadow = true;
@@ -71,7 +73,7 @@ function Cobra({ p }: { p: Palette }) {
       });
       o.material = Array.isArray(o.material) ? updated : updated[0];
     });
-    return copy;
+    return normalized;
   }, [scene, p]);
   useEffect(() => () => object.traverse(o => {
     if (o instanceof THREE.Mesh) {
