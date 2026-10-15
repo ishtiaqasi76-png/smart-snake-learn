@@ -58,7 +58,7 @@ function Cobra({ p }: { p: Palette }) {
       if (!(o instanceof THREE.Mesh)) return;
       o.castShadow = true;
       const materials = Array.isArray(o.material) ? o.material : [o.material];
-      o.material = materials.map(m => {
+      const updated = materials.map(m => {
         const mat = m.clone();
         if (mat instanceof THREE.MeshStandardMaterial) {
           if (m.name === "DarkGreen") mat.color.set(p.head);
@@ -69,6 +69,7 @@ function Cobra({ p }: { p: Palette }) {
         }
         return mat;
       });
+      o.material = Array.isArray(o.material) ? updated : updated[0];
     });
     return copy;
   }, [scene, p]);
@@ -170,7 +171,7 @@ function Ground({ cols, rows, bgUrl, p }: { cols: number; rows: number; bgUrl: s
 
 export const SnakeScene = ({ snake, items, dir, cols, rows, bgUrl, paused }: SceneProps) => {
   const p = usePalette();
-  return <Canvas shadows dpr={[1, 1.5]} orthographic camera={{ position: [0, 22, 15], zoom: 24, near: .1, far: 80 }} onCreated={({ camera }) => { camera.lookAt(0, 0, 0); camera.updateProjectionMatrix(); }}>
+  return <Canvas shadows={{ type: THREE.PCFShadowMap }} dpr={[1, 1.5]} orthographic camera={{ position: [0, 22, 15], zoom: 24, near: .1, far: 80 }} onCreated={({ camera }) => { camera.lookAt(0, 0, 0); camera.updateProjectionMatrix(); }}>
     <FitGarden cols={cols} />
     <color attach="background" args={[p.sky]} />
     <hemisphereLight args={[p.light, p.head, 1.2]} />
